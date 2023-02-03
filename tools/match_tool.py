@@ -221,6 +221,43 @@ def match_bd_metia_force(expect: int, per_number: int, *bd_paths: str) -> list:
     return result[:expect]
 
 
+# 匹配原盘文件
+# 强制动态匹配
+# 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
+def match_bd_metia_force_dynamic(expect: int, per_number: int, *bd_paths: str) -> list:
+    result, messages, remain = [], [], expect
+    # 强制动态匹配
+    for bd_path in bd_paths:
+        if remain <= 0:
+            break
+        media_files = search_maxsize_file(per_number, os.path.join(bd_path, "BDMV", "STREAM"), suffix="m2ts")
+        messages.append((bd_path, media_files))
+        # 无法获取到期望数量的媒体文件
+        if len(media_files) != per_number and len(result) < expect:
+            return []
+        else:
+            for media_file_name in media_files:
+                result.append(os.path.join(bd_path, "BDMV", "STREAM", media_file_name))
+            remain -= per_number
+    # 依旧有剩余未能全部匹配的
+    if remain > 0:
+        remain += per_number
+        # 重新处理最后一个盘的文件
+        result, messages = result[:-per_number], messages[:-1]
+        media_files = search_maxsize_file(remain, os.path.join(bd_paths[-1], "BDMV", "STREAM"), suffix="m2ts")
+        if len(media_files) < remain:
+            print("自动匹配失败")
+            return []
+        for media_file_name in media_files:
+            result.append(os.path.join(bd_paths[-1], "BDMV", "STREAM", media_file_name))
+        messages.append((bd_paths[-1], media_files))
+
+    if debug:
+        for message in messages:
+            print(message[0], message[1])
+    return result[:expect]
+
+
 # 为媒体文件添加字幕
 # 注 多次运行会进行字幕的覆盖
 def add_subtitle_for_metia(metia_subtitle_dic: dict, only_show: bool = True) -> int:

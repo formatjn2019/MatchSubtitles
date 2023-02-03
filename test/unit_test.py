@@ -1,6 +1,7 @@
 import unittest
 
-from rule.rules import match_bd_subtitle_auto, match_bd_subtitle_force_by_order
+from rule.rules import match_bd_subtitle_auto, match_bd_subtitle_force_by_order_and_num, \
+    match_bd_subtitle_force_by_subtitle
 from tools.match_tool import parse_names, scanning_subtitle, search_bd, add_subtitle_for_metia
 from utils.file_util import search_maxsize_file
 from utils.match_util import count_most_char_by_index, search_max_prefix_suffix
@@ -59,13 +60,18 @@ class MyTestCase(unittest.TestCase):
 
     # 测试强制顺序模式添加原盘字幕
     def test_add_subtitle_for_BDMV_force_order(self):
-        metia_subtitle_dic = match_bd_subtitle_force_by_order(
+        metia_subtitle_dic = match_bd_subtitle_force_by_order_and_num(
             r"D:\Downloads\fff\BD\[BDMV][Kyoukai no Kanata][Vol.01-07]",
             r"D:\Downloads\fff\字幕\[VCB-Studio&Liuyun] Kyokai no Kanata [Hi10p_1080p]"
             , 2)
         self.assertEqual(12, len(metia_subtitle_dic))
         self.assertEqual(12, add_subtitle_for_metia(metia_subtitle_dic, only_show=True))
-
+    def test_match_bd_subtitle_force_by_subtitle(self):
+        metia_subtitle_dic = match_bd_subtitle_force_by_subtitle(
+            r"D:\Downloads\fff\BD\[BDMV]T",
+            r"D:\Downloads\fff\字幕\[Snow-Raws] とある科学の超電磁砲T")
+        self.assertEqual(12, len(metia_subtitle_dic))
+        self.assertEqual(12, add_subtitle_for_metia(metia_subtitle_dic, only_show=True))
 
 if __name__ == '__main__':
     unittest.main()

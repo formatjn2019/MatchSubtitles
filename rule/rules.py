@@ -1,6 +1,7 @@
 import re
 
-from tools.match_tool import scanning_subtitle, search_bd, match_bd_metia, match_bd_metia_force
+from tools.match_tool import scanning_subtitle, search_bd, match_bd_metia, match_bd_metia_force, \
+    match_bd_metia_force_dynamic
 
 KEY_WORDS_RULE_DIC = {
     "全部匹配": re.compile(r"^.*$"),
@@ -51,9 +52,9 @@ def match_bd_subtitle_auto(BDMV_path: str, subtitles_dir: str) -> dict:
 
 
 # 原盘剧集匹配
-# 指定参数进行强制数量匹配
+# 指定每盘数量 进行强制数量匹配
 # 字典格式 媒体路径:[字幕路径]
-def match_bd_subtitle_force_by_order(BDMV_path: str, subtitles_dir: str, per_number: int) -> dict:
+def match_bd_subtitle_force_by_order_and_num(BDMV_path: str, subtitles_dir: str, per_number: int) -> dict:
     subtitle_dic, dic_list = search_bdmv_and_subtitles(BDMV_path, subtitles_dir)
     # 尝试根据字幕数量强制匹配
     media_list = match_bd_metia_force(len(subtitle_dic),per_number, *dic_list)
@@ -70,3 +71,27 @@ def match_bd_subtitle_force_by_order(BDMV_path: str, subtitles_dir: str, per_num
         return result
 
 
+# 原盘剧集匹配
+# 指定每盘数量 进行强制数量匹配
+# 字典格式 媒体路径:[字幕路径]
+def match_bd_subtitle_force_by_subtitle(BDMV_path: str, subtitles_dir: str) -> dict:
+    subtitle_dic, dic_list = search_bdmv_and_subtitles(BDMV_path, subtitles_dir)
+    # 计算数量
+    print(len(subtitle_dic),len(dic_list))
+    avg_num=round(len(subtitle_dic)/len(dic_list))
+    media_list = match_bd_metia_force_dynamic(len(subtitle_dic),avg_num, *dic_list)
+    print(media_list)
+    return {}
+    # # 尝试根据字幕数量强制匹配
+    # media_list = match_bd_metia_force(len(subtitle_dic), *dic_list)
+    # if len(media_list) > 0:
+    #     result = {}
+    #     keywords= sorted(subtitle_dic.keys())
+    #     for index in range(len(media_list)):
+    #         result[media_list[index]] = subtitle_dic[keywords[index]]
+    #
+    #     if visual:
+    #         for index in range(len(media_list)):
+    #             print("剧集：\t{}\n媒体：\t{}".format(keywords[index], media_list[index]))
+    #             print("字幕：\t{}\n".format("\n\t\t".join(subtitle_dic[keywords[index]])))
+    #     return result
