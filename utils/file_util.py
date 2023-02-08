@@ -1,6 +1,6 @@
 import os
 
-debug = True
+debug = False
 
 
 # 找到最大的n个文件

@@ -1,3 +1,4 @@
+import math
 import os
 import shutil
 
@@ -33,17 +34,35 @@ def add_subtitle_for_media(media_subtitle_dic: dict, only_show: bool = True) -> 
 
 
 # 将全部文件移动到新路径
-def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: dict, prefix="", suffix="",
+def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: dict, target_dir: str, prefix="",
+                                    suffix="",
                                     only_show: bool = True) -> int:
     result = 0
-    new_name_format=prefix+"{}"+suffix
-    for order,media in order_media_dic.items():
-        move_list = []
-        name = "{}{}{}".format(prefix,order,suffix)
-        move_list.append((media,name+media[media.index("."):]))
+    move_dict = {}
+    for order, media_path in order_media_dic.items():
+        # 格式化，根据剧集数量计算格式化字符长度
+        name = "{}{:0>{}d}{}".format(prefix, order, math.ceil(math.log10(len(order_media_dic))), suffix)
+        media_name = os.path.basename(media_path)
+        # 媒体名称
+        move_dict[os.path.join(target_dir, "{}{}".format(name, media_name[media_name.index("."):]))] = media_path
         # shutil.move(media, media[media.index("."):])
-        for subtitle in media_subtitle_dic[media]:
-            move_list.append((media, subtitle + subtitle[subtitle.index("."):]))
-        print(move_list)
+        order = 1
+        for subtitle_path in media_subtitle_dic[media_path]:
+            subtitle_name = os.path.basename(subtitle_path)
+            new_subtitle_name = "{}{}".format(name, subtitle_name[subtitle_name.index("."):])
+            while new_subtitle_name in move_dict:
+                # 当字幕已存在时，重新生成字幕名
+                new_subtitle_name = ".".join([name, str(order), subtitle_name[subtitle_name.index("."):]])
+                order += 1
+            else:
+                # 字幕名称
+                move_dict[os.path.join(target_dir, new_subtitle_name)] = subtitle_path
+        result +=1
 
-
+    for target_path, source_path in move_dict.items():
+        if only_show:
+            print(target_path, "----->", target_path)
+        else:
+            shutil.move(source_path,target_path)
+            print(target_path, "移动至-->", target_path)
+    return result

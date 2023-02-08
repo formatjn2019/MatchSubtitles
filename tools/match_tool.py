@@ -164,8 +164,9 @@ def scanning_subtitle(subtitles_path: str) -> dict:
 
 
 # 搜索原盘目录
-def search_bd(*paths: str) -> dict:
-    result = {}
+# 根据文件夹名或路径进行排序
+def _search_bd(*paths: str) -> list:
+    result = []
     for path in paths:
         if not os.path.exists(path) or not os.path.isdir(path):
             return result
@@ -173,12 +174,19 @@ def search_bd(*paths: str) -> dict:
         if "BDMV" in sub_dir:
             metadir = os.listdir(os.path.join(path, "BDMV"))
             if "STREAM" in metadir and "PLAYLIST" in metadir:
-                result[os.path.basename(path)] = path
+                result.append((os.path.basename(path), path))
         else:
-            subs = search_bd(*[os.path.join(path, name) for name in os.listdir(path)])
-            for k, v in subs.items():
-                result[k] = v
+            for sub in _search_bd(*[os.path.join(path, name) for name in os.listdir(path)]):
+                result.append(sub)
     return result
+
+
+# 搜索原盘目录
+# 根据文件夹名或路径进行排序
+def search_bd(*paths: str) -> list:
+    # 根据文件夹名或路径排序
+    items = sorted(_search_bd(*paths), key=lambda x: (x[0], x[1]))
+    return [path for _, path in items]
 
 
 # 匹配原盘文件
@@ -255,7 +263,3 @@ def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -
         for message in messages:
             print(message[0], message[1])
     return result[:expect]
-
-
-
-
