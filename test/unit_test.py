@@ -2,7 +2,8 @@ import unittest
 
 from rule.rules import match_bd_subtitle_auto, match_bd_subtitle_force_by_order_and_num, \
     match_bd_subtitle_force_by_subtitle
-from tools.match_tool import parse_names, scanning_subtitle, search_bd, add_subtitle_for_metia
+from tools.file_tool import move_media_subtitle_to_new_path, add_subtitle_for_media
+from tools.match_tool import parse_names, scanning_subtitle, search_bd
 from utils.file_util import search_maxsize_file
 from utils.match_util import count_most_char_by_index, search_max_prefix_suffix
 
@@ -53,25 +54,51 @@ class MyTestCase(unittest.TestCase):
 
     # 测试自动模式添加原盘字幕
     def test_add_subtitle_for_BDMV_auto(self):
-        metia_subtitle_dic = match_bd_subtitle_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
-                                                    r"D:\Downloads\tc")
-        self.assertEqual(12, len(metia_subtitle_dic))
-        self.assertEqual(12, add_subtitle_for_metia(metia_subtitle_dic, only_show=True))
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\tc")
+        media_subtitle_dic = match_bd_subtitle_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
+                                                    subtitle_dic)
+        self.assertEqual(12, len(media_subtitle_dic))
+        self.assertEqual(12, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
     # 测试强制顺序模式添加原盘字幕
     def test_add_subtitle_for_BDMV_force_order(self):
-        metia_subtitle_dic = match_bd_subtitle_force_by_order_and_num(
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\fff\字幕\[VCB-Studio&Liuyun] Kyokai no Kanata [Hi10p_1080p]")
+        media_subtitle_dic = match_bd_subtitle_force_by_order_and_num(
             r"D:\Downloads\fff\BD\[BDMV][Kyoukai no Kanata][Vol.01-07]",
-            r"D:\Downloads\fff\字幕\[VCB-Studio&Liuyun] Kyokai no Kanata [Hi10p_1080p]"
+            subtitle_dic
             , 2)
-        self.assertEqual(12, len(metia_subtitle_dic))
-        self.assertEqual(12, add_subtitle_for_metia(metia_subtitle_dic, only_show=True))
+        self.assertEqual(12, len(media_subtitle_dic))
+        self.assertEqual(12, add_subtitle_for_media(media_subtitle_dic, only_show=True))
+
     def test_match_bd_subtitle_force_by_subtitle(self):
-        metia_subtitle_dic = match_bd_subtitle_force_by_subtitle(
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\fff\字幕\[Snow-Raws] とある科学の超電磁砲T")
+        media_subtitle_dic = match_bd_subtitle_force_by_subtitle(
             r"D:\Downloads\fff\BD\[BDMV]T",
-            r"D:\Downloads\fff\字幕\[Snow-Raws] とある科学の超電磁砲T")
-        self.assertEqual(12, len(metia_subtitle_dic))
-        self.assertEqual(12, add_subtitle_for_metia(metia_subtitle_dic, only_show=True))
+            subtitle_dic)
+        self.assertEqual(25, len(media_subtitle_dic))
+        self.assertEqual(25, add_subtitle_for_media(media_subtitle_dic, only_show=True))
+
+    # 测试文件移动
+    def test_move_media_subtitle_to_new_path(self):
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\tc")
+        media_subtitle_dic = match_bd_subtitle_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
+                                                    subtitle_dic)
+        self.assertEqual(12, len(media_subtitle_dic))
+
+        order_media_dic = {}
+        for order,subtitle in subtitle_dic.items():
+            for media, ts in media_subtitle_dic.items():
+                if ts == subtitle:
+                    order_media_dic[order]=media
+        print(len(order_media_dic))
+        print(order_media_dic)
+
+        # self.assertEqual(12, move_media_subtitle_to_new_path(media_subtitle_dic, order_media_dic, only_show=True))
+
 
 if __name__ == '__main__':
     unittest.main()

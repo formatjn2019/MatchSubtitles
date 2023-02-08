@@ -1,6 +1,9 @@
+import shutil
 import subprocess
 import time
 import unittest
+
+
 # import moviepy
 
 def video_duration_1(filename):
@@ -17,9 +20,12 @@ def video_duration_1(filename):
 
 
 class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        video_duration_1("00007.m2ts")
+    def test_move(self):
+        shutil.move("00007.m2ts", "00002.m2ts")
+        shutil.move("00002.m2ts", "00007.m2ts")
+        # video_duration_1("00007.m2ts")
         # self.assertEqual(True, False)  # add assertion here
+
 
 # match_bd_subtitle_force_by_subtitle
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
 import os
 import re
-import shutil
 
 from utils.file_util import search_maxsize_file
 from utils.match_util import replace_re_str, search_max_prefix_suffix
@@ -184,7 +183,7 @@ def search_bd(*paths: str) -> dict:
 
 # 匹配原盘文件
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
-def match_bd_metia(expect: int, *bd_paths: str) -> list:
+def match_bd_media(expect: int, *bd_paths: str) -> list:
     result = []
     # 能精准匹配
     if expect % len(bd_paths) == 0:
@@ -205,7 +204,7 @@ def match_bd_metia(expect: int, *bd_paths: str) -> list:
 
 # 匹配原盘文件
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
-def match_bd_metia_force(expect: int, per_number: int, *bd_paths: str) -> list:
+def match_bd_media_force(expect: int, per_number: int, *bd_paths: str) -> list:
     result = []
     # 强制顺序匹配
     for bd_path in bd_paths:
@@ -224,7 +223,7 @@ def match_bd_metia_force(expect: int, per_number: int, *bd_paths: str) -> list:
 # 匹配原盘文件
 # 强制动态匹配
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
-def match_bd_metia_force_dynamic(expect: int, per_number: int, *bd_paths: str) -> list:
+def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -> list:
     result, messages, remain = [], [], expect
     # 强制动态匹配
     for bd_path in bd_paths:
@@ -258,31 +257,5 @@ def match_bd_metia_force_dynamic(expect: int, per_number: int, *bd_paths: str) -
     return result[:expect]
 
 
-# 为媒体文件添加字幕
-# 注 多次运行会进行字幕的覆盖
-def add_subtitle_for_metia(metia_subtitle_dic: dict, only_show: bool = True) -> int:
-    replace_count = 0
-    subtitle_set = set()
-    for metia_path, subtitles in metia_subtitle_dic.items():
-        print(metia_path)
-        replace_count += 1
-        metia_dir = os.path.dirname(metia_path)
-        metia_name = os.path.basename(metia_path)
-        metia_name = metia_name[:metia_name.index(".")]
-        order = 0
-        for subtitle_path in subtitles:
-            subtitle_name = os.path.basename(subtitle_path)
-            subtitle_suffix = subtitle_name[subtitle_name.find(".") + 1:]
-            new_subtitle_path = os.path.join(metia_dir, ".".join([metia_name, subtitle_suffix]))
-            while new_subtitle_path in subtitle_set:
-                # 当字幕已存在时，重新生成字幕名
-                new_subtitle_path = os.path.join(metia_dir, ".".join([metia_name, str(order), subtitle_suffix]))
-                order += 1
-            else:
-                subtitle_set.add(new_subtitle_path)
-            if only_show:
-                print(subtitle_path, "----->", new_subtitle_path)
-            else:
-                print(subtitle_path, "已替换为-->", new_subtitle_path)
-                shutil.copyfile(subtitle_path, new_subtitle_path)
-    return replace_count
+
+

@@ -6,7 +6,7 @@ debug = True
 # 找到最大的n个文件
 # file_path 为文件所在文件夹
 # 根据指定后缀过滤
-def search_maxsize_file(expect: int, file_root_path: str, suffix: str = "",*exclude:str) -> list:
+def search_maxsize_file(expect: int, file_root_path: str, suffix: str = "", *exclude: str) -> list:
     file_size_dic = {}
     for name in os.listdir(file_root_path):
         if not name.endswith(suffix):

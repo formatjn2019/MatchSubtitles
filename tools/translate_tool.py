@@ -26,4 +26,3 @@ def translate_file(file_path: str, target_path=None):
         translated = context
     with open(target_path, "w", encoding="utf8") as f:
         f.write(translated)
-
