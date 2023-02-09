@@ -28,6 +28,6 @@ class MyTestCase(unittest.TestCase):
         # self.assertEqual(True, False)  # add assertion here
 
 
-# match_bd_caption_force_by_caption
+# match_bd_subtitle_force_by_subtitle
 if __name__ == '__main__':
     unittest.main()

@@ -135,12 +135,12 @@ def scanning_media(media_path: str) -> dict:
 
 
 # 扫描字幕文件
-def scanning_captions(captions_path: str) -> dict:
-    print("路径", captions_path)
+def scanning_subtitle(subtitles_path: str) -> dict:
+    print("路径", subtitles_path)
     suffix, current_count = "", 0
     # 后缀统计 二级后缀统计  名称统计
     suffix_count, language_suffix_count, name_count = {}, {}, {}
-    for filename in os.listdir(captions_path):
+    for filename in os.listdir(subtitles_path):
         # print(filename)
         point_count = filename.count(".")
         if point_count > 0:
@@ -175,7 +175,7 @@ def scanning_captions(captions_path: str) -> dict:
     elif not (max(len(language_suffix_count), 1) * len(name_count) == suffix_count[suffix]):
         print("警告！ 字幕数量并非对其齐\n\n\n")
         print("*" * 100)
-        for filename in os.listdir(captions_path):
+        for filename in os.listdir(subtitles_path):
             print(filename)
         print("*" * 100)
     # 但在未对其的情况下仍然尝试进行匹配
@@ -190,14 +190,14 @@ def scanning_captions(captions_path: str) -> dict:
                 result[index] = []
             for name in names:
                 for language_suffix in language_suffix_count.keys():
-                    sp = os.path.join(captions_path,
+                    sp = os.path.join(subtitles_path,
                                       ".".join([item for item in [name, language_suffix, suffix] if len(item) > 0]))
                     print(sp)
                     if os.path.exists(sp):
                         result[index].append(sp)
 
     if debug:
-        print("路径", captions_path)
+        print("路径", subtitles_path)
         print("后缀:", suffix, "统计", current_count)
         print("后缀统计", suffix_count)
         print("二级后缀统计", language_suffix_count)

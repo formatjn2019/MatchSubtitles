@@ -1,9 +1,9 @@
 import unittest
 
-from rule.rules import match_bd_caption_auto, match_bd_caption_force_by_order_and_num, \
-    match_bd_caption_force_by_caption, match_media_caption_auto
-from tools.file_tool import move_media_caption_to_new_path, add_caption_for_media
-from tools.match_tool import parse_names, scanning_captions, search_bd, scanning_media
+from rule.rules import match_bd_subtitle_auto, match_bd_subtitle_force_by_order_and_num, \
+    match_bd_subtitle_force_by_subtitle, match_media_subtitle_auto
+from tools.file_tool import move_media_subtitle_to_new_path, add_subtitle_for_media
+from tools.match_tool import parse_names, scanning_subtitle, search_bd, scanning_media
 from utils.file_util import search_maxsize_file
 from utils.match_util import count_most_char_by_index, search_max_prefix_suffix
 
@@ -45,8 +45,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(expect, str(parse_names(*name_list)))
 
     # 测试扫描字幕文件
-    def test_scanning_caption(self):
-        self.assertEqual(12, len(scanning_captions(r"D:\Downloads\tc")))
+    def test_scanning_subtitle(self):
+        self.assertEqual(12, len(scanning_subtitle(r"D:\Downloads\tc")))
 
     def test_scanning_media(self):
         # self.assertEqual()
@@ -55,60 +55,60 @@ class MyTestCase(unittest.TestCase):
     def test_search_bd(self):
         self.assertEqual(6, len(search_bd(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin")))
 
-    def test_match_media_caption_auto(self):
-        caption_dic = scanning_captions(r"D:\Downloads\fff\字幕\Gintama")
-        print(caption_dic)
+    def test_match_media_subtitle_auto(self):
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\fff\字幕\Gintama")
+        print(subtitle_dic)
         media_dic = scanning_media(r"D:\Downloads\fff\media\[2006-10][Gintama][BDRIP][1080P][1-201Fin+SP]")
         print(media_dic)
-        media_caption_dic,media_list =match_media_caption_auto(media_dic, caption_dic)
-        self.assertEqual(200,len(media_caption_dic))
-        self.assertEqual(200,add_caption_for_media(media_caption_dic,only_show=True))
+        media_subtitle_dic,media_list =match_media_subtitle_auto(media_dic, subtitle_dic)
+        self.assertEqual(200,len(media_subtitle_dic))
+        self.assertEqual(200,add_subtitle_for_media(media_subtitle_dic,only_show=True))
     # 测试自动模式添加原盘字幕
-    def test_add_caption_for_BDMV_auto(self):
+    def test_add_subtitle_for_BDMV_auto(self):
         # # 搜索字幕目录
-        caption_dic = scanning_captions(r"D:\Downloads\tc")
-        media_caption_dic = match_bd_caption_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
-                                                    caption_dic)
-        self.assertEqual(12, len(media_caption_dic))
-        self.assertEqual(12, add_caption_for_media(media_caption_dic, only_show=True))
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\tc")
+        media_subtitle_dic = match_bd_subtitle_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
+                                                    subtitle_dic)
+        self.assertEqual(12, len(media_subtitle_dic))
+        self.assertEqual(12, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
     # 测试强制顺序模式添加原盘字幕
-    def test_add_caption_for_BDMV_force_order(self):
+    def test_add_subtitle_for_BDMV_force_order(self):
         # # 搜索字幕目录
-        caption_dic = scanning_captions(r"D:\Downloads\fff\字幕\[VCB-Studio&Liuyun] Kyokai no Kanata [Hi10p_1080p]")
-        media_caption_dic = match_bd_caption_force_by_order_and_num(
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\fff\字幕\[VCB-Studio&Liuyun] Kyokai no Kanata [Hi10p_1080p]")
+        media_subtitle_dic = match_bd_subtitle_force_by_order_and_num(
             r"D:\Downloads\fff\BD\[BDMV][Kyoukai no Kanata][Vol.01-07]",
-            caption_dic
+            subtitle_dic
             , 2)
-        self.assertEqual(12, len(media_caption_dic))
-        self.assertEqual(12, add_caption_for_media(media_caption_dic, only_show=True))
+        self.assertEqual(12, len(media_subtitle_dic))
+        self.assertEqual(12, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
-    def test_match_bd_caption_force_by_caption(self):
+    def test_match_bd_subtitle_force_by_subtitle(self):
         # # 搜索字幕目录
-        caption_dic = scanning_captions(r"D:\Downloads\fff\字幕\[Snow-Raws] とある科学の超電磁砲T")
-        media_caption_dic = match_bd_caption_force_by_caption(
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\fff\字幕\[Snow-Raws] とある科学の超電磁砲T")
+        media_subtitle_dic = match_bd_subtitle_force_by_subtitle(
             r"D:\Downloads\fff\BD\[BDMV]T",
-            caption_dic)
-        self.assertEqual(25, len(media_caption_dic))
-        self.assertEqual(25, add_caption_for_media(media_caption_dic, only_show=True))
+            subtitle_dic)
+        self.assertEqual(25, len(media_subtitle_dic))
+        self.assertEqual(25, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
     # 测试文件移动
-    def test_move_media_caption_to_new_path(self):
+    def test_move_media_subtitle_to_new_path(self):
         # # 搜索字幕目录
-        caption_dic = scanning_captions(r"D:\Downloads\tc")
-        media_caption_dic = match_bd_caption_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
-                                                    caption_dic)
-        self.assertEqual(12, len(media_caption_dic))
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\tc")
+        media_subtitle_dic = match_bd_subtitle_auto(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin",
+                                                    subtitle_dic)
+        self.assertEqual(12, len(media_subtitle_dic))
 
         order_media_dic = {}
-        for order, caption in caption_dic.items():
-            for media, ts in media_caption_dic.items():
-                if ts == caption:
+        for order, subtitle in subtitle_dic.items():
+            for media, ts in media_subtitle_dic.items():
+                if ts == subtitle:
                     order_media_dic[order] = media
         print(len(order_media_dic))
         print(order_media_dic)
 
-        # self.assertEqual(12, move_media_caption_to_new_path(media_caption_dic, order_media_dic, only_show=True))
+        # self.assertEqual(12, move_media_subtitle_to_new_path(media_subtitle_dic, order_media_dic, only_show=True))
 
 
 if __name__ == '__main__':
