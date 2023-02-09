@@ -61,8 +61,8 @@ def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: d
 
     for target_path, source_path in move_dict.items():
         if only_show:
-            print(target_path, "----->", target_path)
+            print(source_path, "----->", target_path)
         else:
             shutil.move(source_path,target_path)
-            print(target_path, "移动至-->", target_path)
+            print(source_path, "移动至-->", target_path)
     return result

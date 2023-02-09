@@ -1,3 +1,4 @@
+import shutil
 import unittest
 
 from rule.rules import match_bd_subtitle_force_by_subtitle
@@ -6,6 +7,12 @@ from tools.match_tool import scanning_subtitle, search_bd
 
 
 class MyTestCase(unittest.TestCase):
+    def test_move(self):
+        source =r"H:\videos\为美好的世界献上祝福1\为美好的世界献上祝福S01N01.m2ts"
+        # target =r"H:\videos\素晴1\为美好的世界献上祝福S01N01.m2ts"
+        target =r"H:\videos\素晴1\Konosuba God's Blessing on this Wonderful World! vol.1\BDROM\BDMV\STREAM\00004.m2ts"
+        shutil.move(source,target)
+        # shutil.move(target,source)
     def test_match_bd_subtitle_force_by_subtitle(self):
         # # 搜索字幕目录
         subtitle_dic = scanning_subtitle(r"H:\字幕\素晴\[VCB-Studio] Kono Subarashii Sekai ni Shukufuku wo! [Ma10p_1080p]")
