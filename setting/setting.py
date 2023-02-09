@@ -1,0 +1,3 @@
+
+debug = False
+visual = False

@@ -1,9 +1,9 @@
 import unittest
 
 from rule.rules import match_bd_subtitle_auto, match_bd_subtitle_force_by_order_and_num, \
-    match_bd_subtitle_force_by_subtitle
+    match_bd_subtitle_force_by_subtitle, match_media_subtitle_auto
 from tools.file_tool import move_media_subtitle_to_new_path, add_subtitle_for_media
-from tools.match_tool import parse_names, scanning_subtitle, search_bd
+from tools.match_tool import parse_names, scanning_subtitle, search_bd, scanning_media
 from utils.file_util import search_maxsize_file
 from utils.match_util import count_most_char_by_index, search_max_prefix_suffix
 
@@ -48,10 +48,21 @@ class MyTestCase(unittest.TestCase):
     def test_scanning_subtitle(self):
         self.assertEqual(12, len(scanning_subtitle(r"D:\Downloads\tc")))
 
+    def test_scanning_media(self):
+        # self.assertEqual()
+        scanning_media(r"D:\Downloads\fff\media\[2006-10][Gintama][BDRIP][1080P][1-201Fin+SP]")
     # 测试搜索原盘目录
     def test_search_bd(self):
         self.assertEqual(6, len(search_bd(r"D:\Downloads\fff\BD\[BDMV]ゼロから始める魔法の書 BDBOX1-2 Fin")))
 
+    def test_match_media_subtitle_auto(self):
+        subtitle_dic = scanning_subtitle(r"D:\Downloads\fff\字幕\Gintama")
+        print(subtitle_dic)
+        media_dic = scanning_media(r"D:\Downloads\fff\media\[2006-10][Gintama][BDRIP][1080P][1-201Fin+SP]")
+        print(media_dic)
+        media_subtitle_dic,media_list =match_media_subtitle_auto(media_dic, subtitle_dic)
+        self.assertEqual(200,len(media_subtitle_dic))
+        self.assertEqual(200,add_subtitle_for_media(media_subtitle_dic,only_show=True))
     # 测试自动模式添加原盘字幕
     def test_add_subtitle_for_BDMV_auto(self):
         # # 搜索字幕目录
@@ -90,10 +101,10 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(12, len(media_subtitle_dic))
 
         order_media_dic = {}
-        for order,subtitle in subtitle_dic.items():
+        for order, subtitle in subtitle_dic.items():
             for media, ts in media_subtitle_dic.items():
                 if ts == subtitle:
-                    order_media_dic[order]=media
+                    order_media_dic[order] = media
         print(len(order_media_dic))
         print(order_media_dic)
 

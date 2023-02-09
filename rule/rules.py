@@ -13,19 +13,6 @@ KEY_WORDS_RULE_DIC = {
 visual = True
 
 
-#
-# def scanning_bdmv_path(BDMV_path: str) -> list:
-#     # 搜索原盘目录
-#     bd_dic = search_bd(BDMV_path)
-#     if visual:
-#         print("共扫描到{}个光盘文件".format(len(bd_dic)))
-#     dic_list = []
-#     # 将光盘排序后依次添加
-#     for k in sorted(bd_dic.keys()):
-#         print(k, bd_dic[k])
-#         dic_list.append(bd_dic[k])
-#     return dic_list
-
 
 # 公共方法
 # 字幕与媒体配对
@@ -91,3 +78,12 @@ def match_bd_subtitle_force_by_subtitle(BDMV_path: str, subtitle_dic: dict) -> (
         return _match_media_subtitle(subtitle_dic, media_list, *sorted(subtitle_dic.keys())), media_list
     print("匹配失败")
     return {}, []
+
+
+# 媒体文件字幕匹配 关键字
+def match_media_subtitle_auto(order_media_dic: dict, order_subtitle_dic: dict) -> (dict, list):
+    media_subtitle_dic, orders = {}, []
+    for order, media in order_media_dic.items():
+        if order in order_subtitle_dic.keys():
+            media_subtitle_dic[media] = order_subtitle_dic[order]
+    return media_subtitle_dic, [order_media_dic[order] for order in sorted(orders)]

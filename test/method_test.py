@@ -21,8 +21,9 @@ def video_duration_1(filename):
 
 class MyTestCase(unittest.TestCase):
     def test_move(self):
-        shutil.move("00007.m2ts", "00002.m2ts")
-        shutil.move("00002.m2ts", "00007.m2ts")
+        shutil.move(r"D:\Downloads\fff\文件\5b_armbian_2211.img", r"D:\Downloads\fff\文件2\5b_armbian_2211.img")
+        shutil.move(r"D:\Downloads\fff\文件2\5b_armbian_2211.img", r"D:\Downloads\fff\文件\5b_armbian_2211.img")
+        # shutil.move("00002.m2ts", "00007.m2ts")
         # video_duration_1("00007.m2ts")
         # self.assertEqual(True, False)  # add assertion here
 

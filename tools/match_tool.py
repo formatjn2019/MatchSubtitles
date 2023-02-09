@@ -9,6 +9,15 @@ SUPPORT_SUBLIST = [
     "srt"
 ]
 
+SUPPORT_MEDIA_LIST = [
+    "m2ts",
+    "wmv",
+    "avi",
+    "mp4",
+    "mkv",
+    "flv",
+]
+
 debug = True
 
 
@@ -40,7 +49,7 @@ def parse_names(*namelist: str) -> dict:
     if len(prefix) > 0:
         rules = {
             # 采用前缀匹配的常规字符匹配
-            "前缀规则": re.compile("^" + replace_re_str(prefix) + r"([0-9]{1,2}\.?5?|[0-9]|OVA|PV).*?$"),
+            "前缀规则": re.compile("^" + replace_re_str(prefix) + r"([0-9]{1,4}\.?5?|[0-9]|OVA|PV).*?$"),
             # 带有括号的前后缀统一匹配规则
             "前后缀规则-括号": re.compile(r"^{}\[(\w+)]{}$".format(replace_re_str(prefix), replace_re_str(suffix))),
             # 前后缀统一的单词匹配
@@ -57,8 +66,8 @@ def parse_names(*namelist: str) -> dict:
             else:
                 print(rule_name, "匹配失败")
                 print(namelist)
-                for n in namelist:
-                    print(n)
+                # for n in namelist:
+                #     print(n)
 
         # 完全匹配失败 尝试部分匹配
         most_prefix, most_suffix = search_max_prefix_suffix(*namelist, ratio=0.7)
@@ -67,7 +76,7 @@ def parse_names(*namelist: str) -> dict:
         match_most_rule = re.compile(r"^{}.*{}$".format(replace_re_str(most_prefix), replace_re_str(most_suffix)))
         rules = {
             # 采用前缀匹配的常规字符匹配
-            "前缀规则-部分": re.compile("^" + replace_re_str(most_prefix) + r"([0-9]{1,2}\.?5?|[0-9]|OVA|PV).*?$")
+            "前缀规则-部分": re.compile("^" + replace_re_str(most_prefix) + r"([0-9]{1,4}\.?5?|[0-9]|OVA|PV).*?$")
         }
         for rule_name, rule in rules.items():
             most_names = [name for name in namelist if match_most_rule.match(name)]
@@ -81,13 +90,48 @@ def parse_names(*namelist: str) -> dict:
             else:
                 print(rule_name, "匹配失败")
                 print(namelist)
-                for n in namelist:
-                    print(n)
+                # for n in namelist:
+                #     print(n)
 
         print("全部尝试匹配失败")
     else:
         print("无法找到公共前缀")
     return {}
+
+
+def scanning_media(media_path: str) -> dict:
+    print("路径", media_path)
+    name_count, suffix_count = {}, {}
+    suffix, current_count = "", 0
+    for filename in os.listdir(media_path):
+        if filename.count(".") > 0:
+            # 后缀及其统计
+            temp_suffix = filename[filename.rindex(".") + 1:]
+
+            # 后缀处于支持格式中
+            if temp_suffix in SUPPORT_MEDIA_LIST:
+                # 更新后缀最大值统计
+                if suffix_count.get(temp_suffix,1) > current_count:
+                    suffix, current_count = temp_suffix,  suffix_count.get(temp_suffix,1)
+                suffix_count[temp_suffix] = suffix_count.get(temp_suffix, 0) + 1
+                # 无后缀名称
+                file_name = filename[:-len(temp_suffix) - 1]
+                name_count[file_name] = name_count.get(file_name, 0) + 1
+    # 格式数量匹配
+    if len(suffix_count) > 0:
+        order_names_dic = parse_names(*name_count.keys())
+        order_name_dic = {order: os.path.join(media_path, names[0] + "." + suffix) for order, names in
+                          order_names_dic.items()}
+        if len(order_name_dic) != sum(len(names) for _, names in order_names_dic.items()):
+            print("警告 媒体匹配不完全")
+    else:
+        print("媒体格式多于一种，无法匹配")
+        return {}
+    if debug:
+        print(name_count)
+        print(suffix_count)
+        print("匹配到", len(order_name_dic), "个")
+    return order_name_dic
 
 
 # 扫描字幕文件
@@ -211,6 +255,7 @@ def match_bd_media(expect: int, *bd_paths: str) -> list:
 
 
 # 匹配原盘文件
+# 指定每个光盘数量剧集，强制匹配
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
 def match_bd_media_force(expect: int, per_number: int, *bd_paths: str) -> list:
     result = []

@@ -45,7 +45,6 @@ def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: d
         media_name = os.path.basename(media_path)
         # 媒体名称
         move_dict[os.path.join(target_dir, "{}{}".format(name, media_name[media_name.index("."):]))] = media_path
-        # shutil.move(media, media[media.index("."):])
         order = 1
         for subtitle_path in media_subtitle_dic[media_path]:
             subtitle_name = os.path.basename(subtitle_path)
@@ -57,12 +56,12 @@ def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: d
             else:
                 # 字幕名称
                 move_dict[os.path.join(target_dir, new_subtitle_name)] = subtitle_path
-        result +=1
+        result += 1
 
     for target_path, source_path in move_dict.items():
         if only_show:
             print(source_path, "----->", target_path)
         else:
-            shutil.move(source_path,target_path)
+            shutil.move(source_path, target_path)
             print(source_path, "移动至-->", target_path)
     return result
