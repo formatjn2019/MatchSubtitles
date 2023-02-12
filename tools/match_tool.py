@@ -3,22 +3,8 @@ import re
 
 from utils.file_util import search_maxsize_file
 from utils.match_util import replace_re_str, search_max_prefix_suffix
+from setting import setting
 
-SUPPORT_SUBLIST = [
-    "ass",
-    "srt"
-]
-
-SUPPORT_MEDIA_LIST = [
-    "m2ts",
-    "wmv",
-    "avi",
-    "mp4",
-    "mkv",
-    "flv",
-]
-
-debug = True
 
 
 # 根据名称和规则进行匹配
@@ -109,7 +95,7 @@ def scanning_media(media_path: str) -> dict:
             temp_suffix = filename[filename.rindex(".") + 1:]
 
             # 后缀处于支持格式中
-            if temp_suffix in SUPPORT_MEDIA_LIST:
+            if temp_suffix in setting.SUPPORT_MEDIA_LIST:
                 # 更新后缀最大值统计
                 if suffix_count.get(temp_suffix,1) > current_count:
                     suffix, current_count = temp_suffix,  suffix_count.get(temp_suffix,1)
@@ -127,7 +113,7 @@ def scanning_media(media_path: str) -> dict:
     else:
         print("媒体格式多于一种，无法匹配")
         return {}
-    if debug:
+    if setting.debug:
         print(name_count)
         print(suffix_count)
         print("匹配到", len(order_name_dic), "个")
@@ -150,7 +136,7 @@ def scanning_subtitle(subtitles_path: str) -> dict:
             temp_suffix = filename[suffix_index + 1:]
             suffix_count[temp_suffix] = suffix_count.get(temp_suffix, 0) + 1
             # 后缀处于支持格式中
-            if temp_suffix in SUPPORT_SUBLIST:
+            if temp_suffix in setting.SUPPORT_SUBLIST:
                 # 更新后缀最大值统计
                 if suffix_count[temp_suffix] > current_count:
                     suffix, current_count = temp_suffix, suffix_count[temp_suffix]
@@ -196,7 +182,7 @@ def scanning_subtitle(subtitles_path: str) -> dict:
                     if os.path.exists(sp):
                         result[index].append(sp)
 
-    if debug:
+    if setting.debug:
         print("路径", subtitles_path)
         print("后缀:", suffix, "统计", current_count)
         print("后缀统计", suffix_count)
@@ -304,7 +290,7 @@ def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -
             result.append(os.path.join(bd_paths[-1], "BDMV", "STREAM", media_file_name))
         messages.append((bd_paths[-1], media_files))
 
-    if debug:
+    if setting.debug:
         for message in messages:
             print(message[0], message[1])
     return result[:expect]

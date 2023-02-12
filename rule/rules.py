@@ -1,7 +1,10 @@
+import os
 import re
 
+from setting import setting
 from tools.match_tool import scanning_subtitle, search_bd, match_bd_media, match_bd_media_force, \
     match_bd_media_force_dynamic
+from tools.translate_tool import init_translate_dic, translate_file
 
 KEY_WORDS_RULE_DIC = {
     "全部匹配": re.compile(r"^.*$"),
@@ -9,9 +12,6 @@ KEY_WORDS_RULE_DIC = {
     "数字及.5": re.compile(r"^\d+(\.5)?$"),
     "纯数字": re.compile(r"^\d+$"),
 }
-
-visual = True
-
 
 
 # 公共方法
@@ -21,7 +21,7 @@ def _match_media_subtitle(subtitle_dic: dict, media_list: list, *keywords) -> di
     for index in range(len(media_list)):
         result[media_list[index]] = subtitle_dic[keywords[index]]
 
-    if visual:
+    if setting.verbosity:
         for index in range(len(media_list)):
             print("剧集：\t{}\n媒体：\t{}".format(keywords[index], media_list[index]))
             print("字幕：\t{}\n".format("\n\t\t".join(subtitle_dic[keywords[index]])))
@@ -87,3 +87,19 @@ def match_media_subtitle_auto(order_media_dic: dict, order_subtitle_dic: dict) -
         if order in order_subtitle_dic.keys():
             media_subtitle_dic[media] = order_subtitle_dic[order]
     return media_subtitle_dic, [order_media_dic[order] for order in sorted(orders)]
+
+
+# 翻译字幕
+def translate_subtitles(subtitles_path: str, target_path: str, translate_dic: str = "./rule.csv") -> int:
+    result = 0
+    init_translate_dic(translate_dic)
+    for file_name in os.listdir(subtitles_path):
+        extensions = file_name[file_name.rfind(".") + 1:]
+        if extensions in setting.SUPPORT_SUBLIST:
+            if translate_file(os.path.join(subtitles_path, file_name), os.path.join(target_path, file_name)):
+                result += 1
+                if setting.verbosity:
+                    print(os.path.join(subtitles_path, file_name), "翻译成功")
+            else:
+                print("path:", os.path.join(subtitles_path, file_name), "翻译出错")
+    return result
