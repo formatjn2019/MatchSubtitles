@@ -1,7 +1,8 @@
 import sys
 import argparse
 
-from rule.rules import translate_subtitles
+from rule.rules import translate_subtitles, move_bd_to_target_force_by_num, move_bd_to_target_force_by_each, \
+    match_bd_subtitles
 from setting import setting
 from utils import check_rule
 
@@ -41,7 +42,7 @@ parser.add_argument('--version', '-V', action='version', version='%(prog)s versi
 # 详细
 parser.add_argument('--verbosity', '-v', action='store_true', help='Increase output verbosity', default=False)
 # 通用媒体文件路径
-media_group.add_argument('--media', '-m', action='append', dest='media_path', help=('Media file path'))
+media_group.add_argument('--media', '-m', dest='media_path', help=('Media file path'))
 
 # 放弃枚举，采用程序判定
 allow_parameters = {
@@ -93,12 +94,12 @@ def generate_allows() -> dict:
         # 添加目标路径
         tp.extend([[*opt, "t"] for opt in tp])
         allowed.extend(tp)
-    for opt in [*allowed, ["b", "n", "t"]]:
+    for opt in [*allowed, ["b", "f", "n", "t"], ["b", "f", "e", "t"], ["b", "f", "e", "n", "t"]]:
         tp = [opt]
-        # # 前缀
-        # tp.extend([[*opt, "pf"] for opt in tp if "t" in opt])
-        # # 后缀
-        # tp.extend([[*opt, "sf"] for opt in tp if "t" in opt])
+        # 前缀
+        tp.extend([[*opt, "pf"] for opt in tp if "t" in opt])
+        # 后缀
+        tp.extend([[*opt, "sf"] for opt in tp if "t" in opt])
         # 打印
         tp.extend([[*opt, "p"] for opt in tp])
         allowed.extend(tp)
@@ -108,10 +109,10 @@ def generate_allows() -> dict:
     allowed.append(["tr", "s"])
     # 翻译字幕指定路径
     allowed.append(["tr", "s", "t"])
-    # # 详细信息
-    # allowed.extend([[*opt, "v"] for opt in allowed])
-    # # 调试
-    # allowed.extend([[*opt, "d"] for opt in allowed])
+    # 详细信息
+    allowed.extend([[*opt, "v"] for opt in allowed])
+    # 调试
+    allowed.extend([[*opt, "d"] for opt in allowed])
     return {translate_arr(*allow)[0]: translate_arr(*allow)[1] for allow in allowed if len(allow) > 1}
 
 
@@ -176,7 +177,9 @@ if __name__ == '__main__':
     # 放弃枚举，采用程序判定
     allow_parameters = generate_allows()
     arg_list = sorted([arg for arg in args_dic.keys() if args_dic[arg][0]])
-    arg_str = ".".join([arg for arg in arg_list if arg not in ["d","v"]])
+    arg_str = ".".join([arg for arg in arg_list])
+    select_arg_str = ".".join([arg for arg in arg_list if arg not in ["d", "v", "sf", "pf", "p", "c"]])
+    print(select_arg_str)
     error_list = [k for k, v in args_dic.items() if not v[1]]
     print(args_dic)
     if len(error_list) > 0:
@@ -185,60 +188,73 @@ if __name__ == '__main__':
     if verbosity:
         setting.verbosity = True
         print("详细信息开启")
-    # 翻译字幕
-    if arg_str == "s.tr" or arg_str == "s.t.tr":
-        print(setting.verbosity)
-        translate_count =translate_subtitles(subtitle, target_path)
-        print("共翻译成功{}个".format(translate_count))
-        pass
-    elif arg_str == "s.t.tr":
-        # 翻译到目标目录
-        pass
-    elif arg_str == "s.t":
-        # 原盘 自动匹配字幕 到原盘文件夹
-        pass
-    elif arg_str == "s.t":
-        pass
-    elif arg_str == "s.t":
-        pass
-    elif arg_str == "s.t":
-        pass
-    elif arg_str == "s.t":
-        pass
-
+    if debug:
+        setting.debug = True
+        setting.verbosity = True
+        print("调试开启")
     # 翻译字幕
     # 翻译字幕指定文件夹
     if arg_str not in allow_parameters.keys():
         print("不允许的参数")
         print(arg_str)
         exit(1)
-    if bd_path:
-        print("原盘路径开启")
-    if subtitle:
-        print("字幕开启")
-    if debug:
-        print("调试开启")
-    if each:
-        print("每个文件开启")
-    if force:
-        print("强制模式开启")
-    if media_path:
-        print("媒体开启")
-    if number:
-        print("数量开启")
-    if prefix:
-        print("前缀开启")
-    if suffix:
-        print("后缀开启")
-    if translate:
-        print("翻译开启")
+    # 翻译字幕
+    if select_arg_str == "s.tr" or select_arg_str == "s.t.tr":
+        print(setting.verbosity)
+        translate_count = translate_subtitles(subtitles_path=subtitle, target_path=target_path)
+        print("共翻译成功{}个".format(translate_count))
+        pass
+    elif select_arg_str == "b.f.n.t":
+        print("数量匹配")
+        # 提取目标bd文件到目标位置 指定数量
+        move_bd_to_target_force_by_num(target_path=target_path, prefix=prefix, suffix=suffix, num=number,
+                                       only_show=only_print, *bd_path)
+    elif select_arg_str in ["b.e.f.t", "b.e.f.n.t"]:
+        print("数量,每个匹配")
+        # 提取目标bd文件到目标位置 指定每个，可选总数
+        move_bd_to_target_force_by_each(target_path=target_path, prefix=prefix, suffix=suffix, num=number, each=each,
+                                        only_show=only_print,
+                                        *bd_path)
+    elif select_arg_str in [["b", "s"], ["b", "f", "s"], ["b", "f", "s", "e"]]:
+        print("匹配原盘")
 
-    if target_path:
-        print("目标路径开启")
-    if only_print:
-        print("仅打印开启")
-    if copy_subtitle:
-        print("复制开启")
-    # print(args)
-    # print(sys.argv)
-    # print(sys.orig_argv)
+        match_bd_subtitles(subtitle_path=subtitle, target_path=target_path, prefix=prefix, suffix=suffix, each=each,
+                           num=number, force=force, copy_subtitle=copy_subtitle, only_show=only_print)
+
+    pass
+elif arg_str == "s.t":
+    pass
+elif arg_str == "s.t":
+    pass
+elif arg_str == "s.t":
+    pass
+
+if bd_path:
+    print("原盘路径开启")
+if subtitle:
+    print("字幕开启")
+
+if each:
+    print("每个文件开启")
+if force:
+    print("强制模式开启")
+if media_path:
+    print("媒体开启")
+if number:
+    print("数量开启")
+if prefix:
+    print("前缀开启")
+if suffix:
+    print("后缀开启")
+if translate:
+    print("翻译开启")
+
+if target_path:
+    print("目标路径开启")
+if only_print:
+    print("仅打印开启")
+if copy_subtitle:
+    print("复制开启")
+# print(args)
+# print(sys.argv)
+# print(sys.orig_argv)

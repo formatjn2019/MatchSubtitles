@@ -2,6 +2,29 @@ import math
 import os
 import shutil
 
+from setting import setting
+
+
+# 移动文件，统一处理
+def move_files(source_target_dic: dict, only_show=False) -> (int, int):
+    succeed, error = 0, 0
+    for source_path, target_path in source_target_dic.items():
+        if only_show:
+            print(source_path, "----->", target_path)
+        else:
+            try:
+                shutil.copyfile(source_path, target_path)
+            except IOError as e:
+                if setting.debug:
+                    print(source_path,target_path,e)
+                error += 1
+                print(source_path, "----->", target_path, "error")
+            else:
+                succeed += 1
+                print(source_path, "----->", target_path, "succeed")
+    print("共移动{}个文件,其中成功{}个,失败{}个".format(succeed + error, succeed, error))
+    return succeed, error
+
 
 # 为媒体文件添加字幕
 # 注 多次运行会进行字幕的覆盖
@@ -41,6 +64,7 @@ def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: d
     move_dict = {}
     for order, media_path in order_media_dic.items():
         # 格式化，根据剧集数量计算格式化字符长度
+        # 待修正
         name = "{}{:0>{}d}{}".format(prefix, order, math.ceil(math.log10(len(order_media_dic))), suffix)
         media_name = os.path.basename(media_path)
         # 媒体名称

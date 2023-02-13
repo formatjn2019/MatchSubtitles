@@ -2,9 +2,11 @@ import os
 import re
 
 from setting import setting
-from tools.match_tool import scanning_subtitle, search_bd, match_bd_media, match_bd_media_force, \
+from tools.file_tool import move_files
+from tools.match_tool import scanning_subtitle, search_bd, match_bd_media, match_bd_media_force_each, \
     match_bd_media_force_dynamic
 from tools.translate_tool import init_translate_dic, translate_file
+from utils.file_util import get_file_extension, generate_filename
 
 KEY_WORDS_RULE_DIC = {
     "全部匹配": re.compile(r"^.*$"),
@@ -31,11 +33,11 @@ def _match_media_subtitle(subtitle_dic: dict, media_list: list, *keywords) -> di
 # 原盘剧集匹配
 # 根据字幕动态匹配
 # 字典格式 媒体路径:[字幕路径]
-def match_bd_subtitle_auto(BDMV_path: str, subtitle_dic: dict) -> (dict, list):
+def match_bd_subtitle_auto(subtitle_dic: dict, *BDMV_path: str) -> (dict, list):
     # # 搜索字幕目录
     # subtitle_dic = scanning_subtitle(subtitles_dir)
     # 搜索原盘目录
-    dic_list = search_bd(BDMV_path)
+    dic_list = search_bd(*BDMV_path)
     # subtitle_dic, dic_list = search_bdmv_and_subtitles(BDMV_path, subtitles_dir)
     # dic_list = search_bdmv_and_subtitles(BDMV_path, subtitles_dir)
     for name, rule in KEY_WORDS_RULE_DIC.items():
@@ -52,13 +54,13 @@ def match_bd_subtitle_auto(BDMV_path: str, subtitle_dic: dict) -> (dict, list):
 # 原盘剧集匹配
 # 指定每盘数量 进行强制数量匹配
 # 字典格式 媒体路径:[字幕路径]
-def match_bd_subtitle_force_by_order_and_num(BDMV_path: str, subtitle_dic: dict, per_number: int) -> (dict, list):
+def match_bd_subtitle_force_by_order_and_num(subtitle_dic: dict, per_number: int,*BDMV_path: str) -> (dict, list):
     # # 搜索字幕目录
     # subtitle_dic = scanning_subtitle(subtitles_dir)
     # 搜索原盘目录
-    dic_list = search_bd(BDMV_path)
+    dic_list = search_bd(*BDMV_path)
     # 尝试根据字幕数量强制匹配
-    media_list = match_bd_media_force(len(subtitle_dic), per_number, *dic_list)
+    media_list = match_bd_media_force_each(len(subtitle_dic), per_number, *dic_list)
     if len(media_list) > 0:
         return _match_media_subtitle(subtitle_dic, media_list, *sorted(subtitle_dic.keys())), media_list
     print("匹配失败")
@@ -66,11 +68,11 @@ def match_bd_subtitle_force_by_order_and_num(BDMV_path: str, subtitle_dic: dict,
 
 
 # 原盘剧集匹配
-# 指定每盘数量 进行强制数量匹配
+# 指定标题数量 进行强制数量匹配
 # 字典格式 媒体路径:[字幕路径]
-def match_bd_subtitle_force_by_subtitle(BDMV_path: str, subtitle_dic: dict) -> (dict, list):
+def match_bd_subtitle_force_by_subtitle(subtitle_dic: dict, *BDMV_path: str) -> (dict, list):
     # 搜索原盘目录
-    dic_list = search_bd(BDMV_path)
+    dic_list = search_bd(*BDMV_path)
     # 计算数量
     avg_num = round(len(subtitle_dic) / len(dic_list))
     media_list = match_bd_media_force_dynamic(len(subtitle_dic), avg_num, *dic_list)
@@ -89,10 +91,19 @@ def match_media_subtitle_auto(order_media_dic: dict, order_subtitle_dic: dict) -
     return media_subtitle_dic, [order_media_dic[order] for order in sorted(orders)]
 
 
+"""
+由控制台直接调用
+"""
+
+
 # 翻译字幕
 def translate_subtitles(subtitles_path: str, target_path: str, translate_dic: str = "./rule.csv") -> int:
     result = 0
     init_translate_dic(translate_dic)
+    # 目标路径初始化
+    if target_path is None:
+        target_path = subtitles_path
+    # 翻译
     for file_name in os.listdir(subtitles_path):
         extensions = file_name[file_name.rfind(".") + 1:]
         if extensions in setting.SUPPORT_SUBLIST:
@@ -103,3 +114,56 @@ def translate_subtitles(subtitles_path: str, target_path: str, translate_dic: st
             else:
                 print("path:", os.path.join(subtitles_path, file_name), "翻译出错")
     return result
+
+
+# 移动bd文件到目录路径,指定数量
+def move_bd_to_target_force_by_num(target_path: str, prefix: str, suffix: str, num: int, only_show: bool,
+                                   *BDMV_path: str) -> int:
+    # 搜索原盘目录
+    dic_list = search_bd(*BDMV_path)
+    # 计算数量
+    avg_num = round(num / len(dic_list))
+    media_list = match_bd_media_force_dynamic(num, avg_num, *dic_list)
+    order_media_dic = {order + 1: media_list[order] for order in range(len(media_list))}
+    source_target_dic = {}
+    for order, media_path in order_media_dic.items():
+        new_filename = generate_filename(num, prefix, suffix, order) + "." + get_file_extension(media_path)
+        source_target_dic[media_path] = os.path.join(target_path, new_filename)
+
+    succeed, error = move_files(source_target_dic, only_show)
+    return succeed
+
+
+# 移动bd文件到目录路径,指定数量
+def move_bd_to_target_force_by_each(target_path: str, prefix: str, suffix: str, num: int, each: int, only_show: bool,
+                                    *BDMV_path: str) -> int:
+    # 搜索原盘目录
+    dic_list = search_bd(*BDMV_path)
+    if num is None:
+        num = len(dic_list) * each
+    media_list = match_bd_media_force_each(num, each, *dic_list)
+    order_media_dic = {order + 1: media_list[order] for order in range(len(media_list))}
+    source_target_dic = {}
+    for order, media_path in order_media_dic.items():
+        new_filename = generate_filename(num, prefix, suffix, order) + "." + get_file_extension(
+            media_path)
+        source_target_dic[media_path] = os.path.join(target_path, new_filename)
+
+    succeed, error = move_files(source_target_dic, only_show)
+    return succeed
+
+
+# 原盘字幕匹配
+def match_bd_subtitles(subtitle_path: str, target_path: str, prefix: str, suffix: str, each: int,
+                       num: int, force: bool,
+                       only_show: bool, copy_subtitle: bool,
+                       *bd_path) -> int:
+    subtitle_dic = scanning_subtitle(subtitle_path)
+    media_subtitle_dic, media_list = None, None
+    if not force:
+        edia_subtitle_dic, media_list = match_bd_subtitle_auto(subtitle_dic, *bd_path)
+
+    else:
+        edia_subtitle_dic, media_list = match_bd_subtitle_force_by_subtitle(subtitle_dic,bd_path)
+        edia_subtitle_dic, media_list = match_bd_subtitle_force_by_order_and_num(subtitle_path,)
+    return 0

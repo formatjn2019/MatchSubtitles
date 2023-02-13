@@ -220,6 +220,7 @@ def search_bd(*paths: str) -> list:
 
 
 # 匹配原盘文件
+# 根据期望数量匹配
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
 def match_bd_media(expect: int, *bd_paths: str) -> list:
     result = []
@@ -243,15 +244,15 @@ def match_bd_media(expect: int, *bd_paths: str) -> list:
 # 匹配原盘文件
 # 指定每个光盘数量剧集，强制匹配
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
-def match_bd_media_force(expect: int, per_number: int, *bd_paths: str) -> list:
+def match_bd_media_force_each(expect: int, each: int, *bd_paths: str) -> list:
     result = []
     # 强制顺序匹配
     for bd_path in bd_paths:
         print(bd_path)
-        media_files = search_maxsize_file(per_number, os.path.join(bd_path, "BDMV", "STREAM"), suffix="m2ts")
+        media_files = search_maxsize_file(each, os.path.join(bd_path, "BDMV", "STREAM"), suffix="m2ts")
         print(media_files)
         # 无法获取到期望数量的媒体文件
-        if len(media_files) != per_number and len(result) < expect:
+        if len(media_files) != each and len(result) < expect:
             return []
         else:
             for media_file_name in media_files:
