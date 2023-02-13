@@ -5,7 +5,9 @@ version = "v 0.0.1"
 
 SUPPORT_SUBLIST = [
     "ass",
-    "srt"
+    "srt",
+    "ssa",
+
 ]
 
 SUPPORT_MEDIA_LIST = [

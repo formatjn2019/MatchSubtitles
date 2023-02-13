@@ -206,7 +206,7 @@ def _search_bd(*paths: str) -> list:
             if "STREAM" in metadir and "PLAYLIST" in metadir:
                 result.append((os.path.basename(path), path))
         else:
-            for sub in _search_bd(*[os.path.join(path, name) for name in os.listdir(path)]):
+            for sub in _search_bd(*[os.path.join(path, name) for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]):
                 result.append(sub)
     return result
 

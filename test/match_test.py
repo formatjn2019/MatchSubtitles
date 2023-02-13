@@ -1,9 +1,9 @@
 import shutil
 import unittest
 
-from rule.rules import match_bd_subtitle_force_by_subtitle, match_bd_subtitle_auto
+from rule.rules import match_bd_subtitle_force_by_subtitle, match_bd_subtitle_auto, match_media_subtitle_auto
 from tools.file_tool import add_subtitle_for_media, move_media_subtitle_to_new_path
-from tools.match_tool import scanning_subtitle, search_bd
+from tools.match_tool import scanning_subtitle, search_bd, scanning_media
 
 
 class MyTestCase(unittest.TestCase):
@@ -18,16 +18,28 @@ class MyTestCase(unittest.TestCase):
 
     def test_match_bd_subtitle_force(self):
         # # 搜索字幕目录
-        subtitle_dic = scanning_subtitle(r"H:\字幕\[字幕] 幼女战记 (手抄简, 匹配 SFEO-Raws)")
-        media_subtitle_dic, media_list = match_bd_subtitle_auto(
-            r"H:\videos\Youjo Senki",
+        subtitle_dic = scanning_subtitle(r"H:\字幕\[SweetSub][DARLING in the FRANXX][BDrip][CHS&CHT]\chs")
+        media_subtitle_dic, media_list = match_bd_subtitle_force_by_subtitle(
+            r"H:\videos\Darling in the Franxx",
             subtitle_dic)
-        self.assertEqual(12, len(media_subtitle_dic))
-        self.assertEqual(12, move_media_subtitle_to_new_path(media_subtitle_dic,
+        self.assertEqual(24, len(media_subtitle_dic))
+        self.assertEqual(24, move_media_subtitle_to_new_path(media_subtitle_dic,
                                                              {order + 1: media_list[order] for order in
                                                               range(len(media_list))},
-                                                             r"H:\videos\幼女战纪",
-                                                             "幼女战纪S01N", "", only_show=False))
+                                                             r"H:\videos\比翼之吻",
+                                                             "比翼之吻第", "话", only_show=False))
+
+    def test_match_media_subtitle_force(self):
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"H:\字幕\[魔卡少女樱][Cardcaptor Sakura][カードキャプターさくら][BDRip][TV 01-70 Fin][chs+cht][ssa][LITEN SAKURA制作小组简繁][修正]")
+        print(subtitle_dic)
+        media_dic = scanning_media(r"H:\videos\[アニメ BD][カードキャプターさくら][lloup][Cardcaptor_Sakura][BDrip][01-70]")
+        print(media_dic)
+        media_subtitle_dic, media_list = match_media_subtitle_auto(media_dic, subtitle_dic)
+        self.assertEqual(70, len(media_subtitle_dic))
+        self.assertEqual(70, add_subtitle_for_media(media_subtitle_dic, only_show=False))
+
+
 
     def test_match_bd_subtitle_force_by_subtitle(self):
         # # 搜索字幕目录
