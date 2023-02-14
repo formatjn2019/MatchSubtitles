@@ -1,4 +1,3 @@
-
 debug = False
 verbosity = False
 version = "v 0.0.1"

@@ -10,8 +10,9 @@ def check_path(*paths: str, isdir: bool) -> (bool, str):
             return False, "Folder path required" if isdir else "File path required"
     return True, ""
 
+
 #
 
 
 if __name__ == '__main__':
-    print(check_path(".","..","../tools", isdir=True))
+    print(check_path(".", "..", "../tools", isdir=True))

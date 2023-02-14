@@ -6,7 +6,6 @@ from utils.match_util import replace_re_str, search_max_prefix_suffix
 from setting import setting
 
 
-
 # 根据名称和规则进行匹配
 def match_by_rule(rule: re.Pattern, *names: str) -> (bool, dict):
     result = {}
@@ -30,7 +29,8 @@ def parse_names(*namelist: str) -> dict:
         return {}
     # 根据前缀匹配
     prefix, suffix = search_max_prefix_suffix(*namelist)
-    print("前后缀", prefix, "\t\t********\t\t", suffix)
+    if setting.verbosity:
+        print("前后缀", prefix, "\t\t《********》\t\t", suffix)
     # 尝试对全部文件 完全匹配规则
     if len(prefix) > 0:
         rules = {
@@ -51,14 +51,14 @@ def parse_names(*namelist: str) -> dict:
                 return order_dic
             else:
                 print(rule_name, "匹配失败")
-                print(namelist)
-                # for n in namelist:
-                #     print(n)
+                if setting.debug:
+                    print(namelist)
 
         # 完全匹配失败 尝试部分匹配
         most_prefix, most_suffix = search_max_prefix_suffix(*namelist, ratio=0.7)
-        print("**--**" * 10)
-        print(most_prefix, most_suffix)
+        if setting.verbosity:
+            print("**--**" * 10)
+            print(most_prefix, most_suffix)
         match_most_rule = re.compile(r"^{}.*{}$".format(replace_re_str(most_prefix), replace_re_str(most_suffix)))
         rules = {
             # 采用前缀匹配的常规字符匹配
@@ -71,14 +71,13 @@ def parse_names(*namelist: str) -> dict:
             # 成功匹配到对应的序号
             if match_succeed:
                 print(rule_name, "匹配成功")
-                print(order_dic)
+                if setting.debug:
+                    print(order_dic)
                 return order_dic
             else:
                 print(rule_name, "匹配失败")
-                print(namelist)
-                # for n in namelist:
-                #     print(n)
-
+                if setting.debug:
+                    print(namelist)
         print("全部尝试匹配失败")
     else:
         print("无法找到公共前缀")
@@ -97,8 +96,8 @@ def scanning_media(media_path: str) -> dict:
             # 后缀处于支持格式中
             if temp_suffix in setting.SUPPORT_MEDIA_LIST:
                 # 更新后缀最大值统计
-                if suffix_count.get(temp_suffix,1) > current_count:
-                    suffix, current_count = temp_suffix,  suffix_count.get(temp_suffix,1)
+                if suffix_count.get(temp_suffix, 1) > current_count:
+                    suffix, current_count = temp_suffix, suffix_count.get(temp_suffix, 1)
                 suffix_count[temp_suffix] = suffix_count.get(temp_suffix, 0) + 1
                 # 无后缀名称
                 file_name = filename[:-len(temp_suffix) - 1]
@@ -127,10 +126,8 @@ def scanning_subtitle(subtitles_path: str) -> dict:
     # 后缀统计 二级后缀统计  名称统计
     suffix_count, language_suffix_count, name_count = {}, {}, {}
     for filename in os.listdir(subtitles_path):
-        # print(filename)
         point_count = filename.count(".")
         if point_count > 0:
-            # print(filename)
             # 后缀及其统计
             suffix_index = filename.rindex(".")
             temp_suffix = filename[suffix_index + 1:]
@@ -165,20 +162,22 @@ def scanning_subtitle(subtitles_path: str) -> dict:
             print(filename)
         print("*" * 100)
     # 但在未对其的情况下仍然尝试进行匹配
-    order_name_dic = parse_names(*name_count.keys())
+    order_names_dic = parse_names(*name_count.keys())
 
     result = {}
     # 匹配成功后进行内容重组
-    if not len(order_name_dic) == 0:
-        for index, names in order_name_dic.items():
-            print("{}\t{}\t{}".format("*" * 50, index, "*" * 50))
+    if not len(order_names_dic) == 0:
+        for index, names in order_names_dic.items():
+            if setting.verbosity:
+                print("{}\t{}\t{}".format("*" * 50, index, "*" * 50))
             if index not in result.keys():
                 result[index] = []
             for name in names:
                 for language_suffix in language_suffix_count.keys():
                     sp = os.path.join(subtitles_path,
                                       ".".join([item for item in [name, language_suffix, suffix] if len(item) > 0]))
-                    print(sp)
+                    if setting.verbosity:
+                        print(sp)
                     if os.path.exists(sp):
                         result[index].append(sp)
 
@@ -206,7 +205,8 @@ def _search_bd(*paths: str) -> list:
             if "STREAM" in metadir and "PLAYLIST" in metadir:
                 result.append((os.path.basename(path), path))
         else:
-            for sub in _search_bd(*[os.path.join(path, name) for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]):
+            for sub in _search_bd(*[os.path.join(path, name) for name in os.listdir(path) if
+                                    os.path.isdir(os.path.join(path, name))]):
                 result.append(sub)
     return result
 

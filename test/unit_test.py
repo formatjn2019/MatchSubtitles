@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import rule.rules
@@ -5,23 +6,26 @@ from rule.rules import match_bd_subtitle_auto, match_bd_subtitle_force_by_order_
     match_bd_subtitle_force_by_subtitle, match_media_subtitle_auto
 from tools.file_tool import move_media_subtitle_to_new_path, add_subtitle_for_media
 from tools.match_tool import parse_names, scanning_subtitle, search_bd, scanning_media
-from utils.file_util import search_maxsize_file, get_file_extension, generate_filename
+from utils.file_util import search_maxsize_file, get_file_extension, generate_filename, get_file_name
 from utils.match_util import count_most_char_by_index, search_max_prefix_suffix
 
 
 class MyTestCase(unittest.TestCase):
     # 测试获取文件后缀
-    def test_get_file_extension(self):
+    def test_get_file_name_and_extension(self):
         for file_path in [
             r"D:\Downloads\fff\BD\test\[BDMV] Kono Subarashii Sekai ni Shukufuku wo ! 2 Vol.6\BDMV\STREAM\00004.m2ts",
             "../fff.jpg", "../ff.jpg.tmp", ".slef", "lsef"]:
-            print(get_file_extension(file_path))
+            print(get_file_name(file_path), get_file_extension(file_path))
+            self.assertEqual(os.path.basename(file_path), ".".join(
+                [item for item in [get_file_name(file_path), get_file_extension(file_path)] if len(item) > 0]))
 
     # 测试生成文件名
     def test_generate_file_name(self):
         for i in range(20):
             print(generate_filename(20, "第", "集", i))
         print(generate_filename(20, "第", "集", "ova"))
+        self.assertEqual(True, True)
 
     # 测试找出最大文件
     def test_file_util_max_file(self):

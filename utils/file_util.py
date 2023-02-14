@@ -1,8 +1,6 @@
 import math
 import os
 
-import setting.setting
-
 debug = True
 
 
@@ -34,12 +32,15 @@ def get_file_extension(file_path: str) -> str:
     return filename[filename.find(".") + 1:] if filename.find(".") > 0 else ""
 
 
+def get_file_name(file_path: str) -> str:
+    filename = os.path.basename(file_path)
+    return filename[:filename.find(".")] if filename.find(".") > 0 else filename
+
+
 # 自动生成文件名
 def generate_filename(size: int, prefix: str, suffix: str, order: any) -> str:
     prefix = prefix if prefix is not None else ""
     suffix = suffix if suffix is not None else ""
-    if setting.setting.debug:
-        print(size,prefix,suffix,order)
     # 数字格式化输出
     if type(order) == int:
         return "{}{:0>{}d}{}".format(prefix, order, math.ceil(math.log10(size)), suffix)

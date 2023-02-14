@@ -17,6 +17,7 @@ def init_translate_dic(filepath: str):
     except IOError:
         print("加载翻译规则错误")
 
+
 # 翻译
 # 不指定保存路径则直接翻译原文
 def translate_file(file_path: str, target_path=None) -> bool:

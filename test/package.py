@@ -25,7 +25,8 @@ parser.add_argument('--subtitle', '-s', dest='subtitle', help='Path of subtitles
 # 翻译
 parser.add_argument('--translate', '-t', action='store_true', help='Translate subtitles', default=False)
 # 版本
-parser.add_argument('--version', '-V', action='version', version='%(prog)s version : {}'.format(varsion), help='Show the version')
+parser.add_argument('--version', '-V', action='version', version='%(prog)s version : {}'.format(varsion),
+                    help='Show the version')
 # 详细
 parser.add_argument('--verbosity', '-v', action='store_true', help='Increase output verbosity', default=False)
 # 通用媒体文件路径
