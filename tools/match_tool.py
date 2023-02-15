@@ -8,8 +8,7 @@ from setting import setting
 
 # 根据名称和规则进行匹配
 def match_by_rule(rule: re.Pattern, *names: str) -> (bool, dict):
-    result = {}
-    match_flag = True
+    result, match_flag = {}, True
     for n in names:
         match = rule.match(n)
         match_flag = match_flag and bool(match)
@@ -24,6 +23,7 @@ def match_by_rule(rule: re.Pattern, *names: str) -> (bool, dict):
 
 # 解析名称
 def parse_names(*namelist: str) -> dict:
+    # 文件过少不会进行匹配
     if len(namelist) < 4:
         print("文件数量过少")
         return {}
@@ -48,13 +48,15 @@ def parse_names(*namelist: str) -> dict:
             # 成功匹配到对应的序号
             if match_succeed:
                 print(rule_name, "匹配成功")
+                if setting.debug:
+                    print(order_dic)
                 return order_dic
             else:
                 print(rule_name, "匹配失败")
                 if setting.debug:
                     print(namelist)
 
-        # 完全匹配失败 尝试部分匹配
+        # 完全匹配失败 尝试部分匹配 比例为0.7
         most_prefix, most_suffix = search_max_prefix_suffix(*namelist, ratio=0.7)
         if setting.verbosity:
             print("**--**" * 10)
@@ -66,7 +68,6 @@ def parse_names(*namelist: str) -> dict:
         }
         for rule_name, rule in rules.items():
             most_names = [name for name in namelist if match_most_rule.match(name)]
-            print(len(most_names))
             match_succeed, order_dic = match_by_rule(rule, *most_names)
             # 成功匹配到对应的序号
             if match_succeed:
@@ -85,14 +86,14 @@ def parse_names(*namelist: str) -> dict:
 
 
 def scanning_media(media_path: str) -> dict:
-    print("路径", media_path)
+    if setting.verbosity:
+        print("路径", media_path)
     name_count, suffix_count = {}, {}
     suffix, current_count = "", 0
     for filename in os.listdir(media_path):
         if filename.count(".") > 0:
             # 后缀及其统计
             temp_suffix = filename[filename.rindex(".") + 1:]
-
             # 后缀处于支持格式中
             if temp_suffix in setting.SUPPORT_MEDIA_LIST:
                 # 更新后缀最大值统计
@@ -113,15 +114,16 @@ def scanning_media(media_path: str) -> dict:
         print("媒体格式多于一种，无法匹配")
         return {}
     if setting.debug:
-        print(name_count)
-        print(suffix_count)
+        print("name_count: ", name_count)
+        print("suffix_count: ", suffix_count)
         print("匹配到", len(order_name_dic), "个")
     return order_name_dic
 
 
 # 扫描字幕文件
 def scanning_subtitle(subtitles_path: str) -> dict:
-    print("路径", subtitles_path)
+    if setting.verbosity:
+        print("路径", subtitles_path)
     suffix, current_count = "", 0
     # 后缀统计 二级后缀统计  名称统计
     suffix_count, language_suffix_count, name_count = {}, {}, {}
@@ -215,8 +217,8 @@ def _search_bd(*paths: str) -> list:
 # 根据文件夹名或路径进行排序
 def search_bd(*paths: str) -> list:
     # 根据文件夹名或路径排序
-    items = sorted(_search_bd(*paths), key=lambda x: (x[0], x[1]))
-    return [path for _, path in items]
+    # 不同路径 根据路径排序，同一路径，根据文件名排序
+    return [path for _, path in sorted(_search_bd(*paths), key=lambda key: (key[0], key[1]))]
 
 
 # 匹配原盘文件
@@ -229,9 +231,9 @@ def match_bd_media(expect: int, *bd_paths: str) -> list:
         # 预估剧集数量
         episodes_num = int(expect / len(bd_paths))
         for bd_path in bd_paths:
-            print(bd_path)
             media_files = search_maxsize_file(episodes_num, os.path.join(bd_path, "BDMV", "STREAM"), suffix="m2ts")
-            print(media_files)
+            if setting.verbosity:
+                print(bd_path, media_files)
             # 无法获取到期望数量的媒体文件
             if len(media_files) != episodes_num:
                 return []
@@ -248,9 +250,9 @@ def match_bd_media_force_each(expect: int, each: int, *bd_paths: str) -> list:
     result = []
     # 强制顺序匹配
     for bd_path in bd_paths:
-        print(bd_path)
         media_files = search_maxsize_file(each, os.path.join(bd_path, "BDMV", "STREAM"), suffix="m2ts")
-        print(media_files)
+        if setting.verbosity:
+            print(bd_path, media_files)
         # 无法获取到期望数量的媒体文件
         if len(media_files) != each and len(result) < expect:
             return []

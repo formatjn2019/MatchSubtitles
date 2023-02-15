@@ -99,11 +99,6 @@ def translate_arr(*args: str) -> (str, str):
 
 
 if __name__ == '__main__':
-
-    # for k, v in generate_allows().items():
-    #     # if k not in allow_parameters.keys():
-    #         print(k, v)
-    # exit(0)
     args = parser.parse_args()
     bd_path = args.bd_path
     target_path = args.target_path
@@ -144,7 +139,6 @@ if __name__ == '__main__':
     error_list = [k for k, v in args_dic.items() if not v[1]]
     if debug:
         print(select_arg_str, translate_arr(*arg_list))
-        # print(args_dic)
     # 参数检查发现错误
     if len(error_list) > 0:
         print("error", error_list)

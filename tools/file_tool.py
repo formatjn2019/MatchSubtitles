@@ -7,8 +7,6 @@ from utils import file_util
 
 # 移动,复制文件，统一处理
 def move_copy_files(source_target_dic: dict, only_show=False, copy_file=False) -> (int, int):
-    print(only_show)
-    print(len(source_target_dic))
     succeed, error = 0, 0
     for source_path, target_path in source_target_dic.items():
         if only_show:
@@ -27,7 +25,7 @@ def move_copy_files(source_target_dic: dict, only_show=False, copy_file=False) -
             else:
                 succeed += 1
                 print(source_path, "----->", target_path, "succeed")
-    print("共移动{}个文件,其中成功{}个,失败{}个".format(succeed + error, succeed, error))
+    print("共{}{}个文件,其中成功{}个,失败{}个".format("复制" if copy_file else "移动", succeed + error, succeed, error))
     return succeed, error
 
 
@@ -51,8 +49,7 @@ def add_subtitle_for_media(media_subtitle_dic: dict, only_show: bool = True, cop
                 subtitle_set.add(new_subtitle_path)
             subtitle_source_target_dic[subtitle_path] = new_subtitle_path
     succeed, _ = move_copy_files(subtitle_source_target_dic, only_show, copy_subtitle)
-    # print(len(subtitle_source_target_dic))
-    return len(media_subtitle_dic) if only_show else succeed
+    return sum([len(subtitles) for _, subtitles in media_subtitle_dic.items()]) if only_show else succeed
 
 
 # 将全部文件移动到新路径
@@ -79,4 +76,4 @@ def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: d
 
     move_copy_files(source_target_dic=subtitle_dic, only_show=only_show, copy_file=copy_subtitle)
     successes, _ = move_copy_files(source_target_dic=media_dic, only_show=only_show, copy_file=False)
-    return successes
+    return successes if not only_show else len(media_dic)

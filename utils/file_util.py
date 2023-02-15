@@ -1,7 +1,7 @@
 import math
 import os
 
-debug = True
+from setting import setting
 
 
 # 找到最大的n个文件
@@ -14,7 +14,7 @@ def search_maxsize_file(expect: int, file_root_path: str, suffix: str = "", *exc
             continue
         file_path = os.path.join(file_root_path, name)
         size = os.stat(file_path).st_size
-        if debug:
+        if setting.virtual_file:
             # 测试文件采用虚拟数值
             with open(file_path, "r", encoding="utf8") as f:
                 size = int(f.read())
@@ -32,6 +32,7 @@ def get_file_extension(file_path: str) -> str:
     return filename[filename.find(".") + 1:] if filename.find(".") > 0 else ""
 
 
+# 获取文件名
 def get_file_name(file_path: str) -> str:
     filename = os.path.basename(file_path)
     return filename[:filename.find(".")] if filename.find(".") > 0 else filename
@@ -43,5 +44,5 @@ def generate_filename(size: int, prefix: str, suffix: str, order: any) -> str:
     suffix = suffix if suffix is not None else ""
     # 数字格式化输出
     if type(order) == int:
-        return "{}{:0>{}d}{}".format(prefix, order, math.ceil(math.log10(size)), suffix)
+        return "{}{:0>{}d}{}".format(prefix, order, math.ceil(math.log10(size+1)), suffix)
     return "{}{}{}".format(prefix, order, suffix)

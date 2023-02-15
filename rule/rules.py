@@ -34,13 +34,10 @@ def _match_media_subtitle(subtitle_dic: dict, media_list: list, *keywords) -> di
 # 根据字幕动态匹配
 # 字典格式 媒体路径:[字幕路径]
 def match_bd_subtitle_auto(subtitle_dic: dict, *BDMV_path: str) -> (dict, list):
-    # # 搜索字幕目录
-    # subtitle_dic = scanning_subtitle(subtitles_dir)
     # 搜索原盘目录
     dic_list = search_bd(*BDMV_path)
-    print(dic_list)
-    # subtitle_dic, dic_list = search_bdmv_and_subtitles(BDMV_path, subtitles_dir)
-    # dic_list = search_bdmv_and_subtitles(BDMV_path, subtitles_dir)
+    if setting.debug:
+        print(dic_list)
     for name, rule in KEY_WORDS_RULE_DIC.items():
         keywords = sorted([keyword for keyword in subtitle_dic.keys() if rule.match(keyword)])
         print("采用 《{}》 规则解析字幕 共{}集\n分别为\t{}".format(name, len(keywords), "\t".join(keywords)))
@@ -56,8 +53,6 @@ def match_bd_subtitle_auto(subtitle_dic: dict, *BDMV_path: str) -> (dict, list):
 # 指定每盘数量 进行强制数量匹配
 # 字典格式 媒体路径:[字幕路径]
 def match_bd_subtitle_force_by_order_and_num(subtitle_dic: dict, each: int, *BDMV_path: str) -> (dict, list):
-    # # 搜索字幕目录
-    # subtitle_dic = scanning_subtitle(subtitles_dir)
     # 搜索原盘目录
     dic_list = search_bd(*BDMV_path)
     # 尝试根据字幕数量强制匹配
@@ -131,9 +126,8 @@ def move_bd_to_target_force_by_num(target_path: str, prefix: str, suffix: str, n
     for order, media_path in order_media_dic.items():
         new_filename = generate_filename(num, prefix, suffix, order) + "." + get_file_extension(media_path)
         source_target_dic[media_path] = os.path.join(target_path, new_filename)
-
     succeed, error = move_copy_files(source_target_dic, only_show)
-    return succeed
+    return succeed if not only_show else len(source_target_dic)
 
 
 # 移动bd文件到目录路径,指定数量
@@ -152,14 +146,13 @@ def move_bd_to_target_force_by_each(target_path: str, prefix: str, suffix: str, 
         source_target_dic[media_path] = os.path.join(target_path, new_filename)
 
     succeed, error = move_copy_files(source_target_dic, only_show)
-    return succeed
+    return succeed if not only_show else len(source_target_dic)
 
 
 # 原盘字幕匹配
 def match_bd_subtitles(subtitle_path: str, target_path: str, prefix: str, suffix: str, each: int,
                        force: bool, only_show: bool, copy_subtitle: bool,
                        *bd_path) -> int:
-    # print(subtitle_path, target_path, prefix, suffix, each, force, only_show, copy_subtitle, bd_path)
     subtitle_dic = scanning_subtitle(subtitle_path)
     if len(subtitle_dic) == 0:
         print("匹配字幕失败")
@@ -177,12 +170,12 @@ def match_bd_subtitles(subtitle_path: str, target_path: str, prefix: str, suffix
         print("匹配字幕和媒体文件失败")
         return 0
     if target_path is None:
-        return add_subtitle_for_media(media_subtitle_dic, only_show=True)
+        return add_subtitle_for_media(media_subtitle_dic, only_show=only_show, copy_subtitle=copy_subtitle)
     else:
         return move_media_subtitle_to_new_path(media_subtitle_dic=media_subtitle_dic,
                                                order_media_dic={order + 1: media_list[order] for order in
                                                                 range(len(media_list))},
-                                               target_dir=target_path, suffix=prefix, prefix=suffix,
+                                               target_dir=target_path, suffix=suffix, prefix=prefix,
                                                only_show=only_show, copy_subtitle=copy_subtitle)
 
 
@@ -209,5 +202,5 @@ def match_media_subtitles(media_path: str, subtitle_path: str, target_path: str,
         return move_media_subtitle_to_new_path(media_subtitle_dic=media_subtitle_dic,
                                                order_media_dic={order + 1: media_list[order] for order in
                                                                 range(len(media_list))},
-                                               target_dir=target_path, suffix=prefix, prefix=suffix,
+                                               target_dir=target_path, suffix=suffix, prefix=prefix,
                                                only_show=only_show, copy_subtitle=copy_subtitle)
