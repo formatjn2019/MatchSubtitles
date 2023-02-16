@@ -104,7 +104,7 @@ if __name__ == '__main__':
     target_path = args.target_path
     copy_subtitle = args.copy_subtitle
     subtitle = args.subtitle
-    debug = args.debug
+    setting.debug = debug = args.debug
     each = args.each
     force = args.force
     media_path = args.media_path
@@ -112,8 +112,9 @@ if __name__ == '__main__':
     prefix = args.prefix
     suffix = args.suffix
     translate = args.translate
-    verbosity = args.verbosity
+    setting.verbosity = verbosity = args.verbosity or args.debug
     only_print = args.only_print
+
     # 参数信息获取及有效性核验
     args_dic = {
         "b": (bd_path, *((True, "") if not bd_path else check_rule.check_path(*bd_path, isdir=True))),
@@ -143,14 +144,7 @@ if __name__ == '__main__':
     if len(error_list) > 0:
         print("error", error_list)
         print([args_dic[err] for err in error_list])
-        exit(0)
-    if verbosity:
-        setting.verbosity = True
-        print("详细信息开启")
-    if debug:
-        setting.debug = True
-        setting.verbosity = True
-        print("调试开启")
+        sys.exit(0)
     # 翻译字幕
     # 翻译字幕指定文件夹
     if arg_str not in allow_parameters.keys():
@@ -159,7 +153,7 @@ if __name__ == '__main__':
         print("允许的参数为:")
         for arg, introduce in allow_parameters.items():
             print(arg, introduce)
-        exit(1)
+        sys.exit(1)
     # 翻译字幕
     if select_arg_str == "s.tr" or select_arg_str == "s.t.tr":
         translate_count = translate_subtitles(subtitles_path=subtitle, target_path=target_path)
@@ -183,4 +177,4 @@ if __name__ == '__main__':
     else:
         print(select_arg_str, translate_arr(*arg_list))
         print("出现违规参数，程序错误")
-        exit(0)
+        sys.exit(0)
