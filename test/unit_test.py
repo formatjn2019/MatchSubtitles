@@ -63,7 +63,9 @@ class MyTestCase(unittest.TestCase):
     def test_match_by_rule(self):
         name_list = ["s101[m2]", "s102[m2]", "s103[m2]", "s104[m2]", "s105[m2]", "s106[m2]", "s107[m2]", "s108[m2]",
                      "s109[m2]", "s110[m2]"]
-        expect = """{'01': ['s101[m2]'], '02': ['s102[m2]'], '03': ['s103[m2]'], '04': ['s104[m2]'], '05': ['s105[m2]'], '06': ['s106[m2]'], '07': ['s107[m2]'], '08': ['s108[m2]'], '09': ['s109[m2]'], '10': ['s110[m2]']}"""
+        expect = "{'01': ['s101[m2]'], '02': ['s102[m2]'], '03': ['s103[m2]'], '04': ['s104[m2]']," + \
+                 " '05': ['s105[m2]'], '06': ['s106[m2]'], '07': ['s107[m2]'], '08': ['s108[m2]']," + \
+                 " '09': ['s109[m2]'], '10': ['s110[m2]']}"
         self.assertEqual(expect, str(parse_names(*name_list)))
 
     # 测试扫描字幕文件
@@ -146,16 +148,25 @@ class MyTestCase(unittest.TestCase):
 
     # 原盘统一测试
     def test_match_bd_subtitles(self):
-        self.assertEqual(12,match_bd_subtitles(r"../test_file/subtitle/6_12_subtitle",None,None,None,None,False,False,True,"../test_file/bdmv/6_12"))
-        self.assertEqual(24,match_bd_subtitles(r"../test_file/subtitle/7_12_subtitle",None,None,None,2,True,False,True,"../test_file/bdmv/7_12"))
-        self.assertEqual(50,match_bd_subtitles(r"../test_file/subtitle/8_25_subtitle",None,None,None,None,True,False,True,"../test_file/bdmv/8_25"))
+        self.assertEqual(12, match_bd_subtitles(r"../test_file/subtitle/6_12_subtitle", None, None, None, None, False,
+                                                False, True, "../test_file/bdmv/6_12"))
+        self.assertEqual(24,
+                         match_bd_subtitles(r"../test_file/subtitle/7_12_subtitle", None, None, None, 2, True, False,
+                                            True, "../test_file/bdmv/7_12"))
+        self.assertEqual(50,
+                         match_bd_subtitles(r"../test_file/subtitle/8_25_subtitle", None, None, None, None, True, False,
+                                            True, "../test_file/bdmv/8_25"))
         self.assertEqual(12,
-                         match_bd_subtitles(r"../test_file/subtitle/6_12_subtitle", r"../test_file/target/bd_target1", "第", "集", None, False, True,
+                         match_bd_subtitles(r"../test_file/subtitle/6_12_subtitle", r"../test_file/target/bd_target1",
+                                            "第", "集", None, False, True,
                                             True, "../test_file/bdmv/6_12"))
-        self.assertEqual(12, match_bd_subtitles(r"../test_file/subtitle/7_12_subtitle",r"../test_file/target/bd_target2", "第", "集", 2, True, True,
-                                                True, "../test_file/bdmv/7_12"))
+        self.assertEqual(12,
+                         match_bd_subtitles(r"../test_file/subtitle/7_12_subtitle", r"../test_file/target/bd_target2",
+                                            "第", "集", 2, True, True,
+                                            True, "../test_file/bdmv/7_12"))
         self.assertEqual(25,
-                         match_bd_subtitles(r"../test_file/subtitle/8_25_subtitle",r"../test_file/target/bd_target3", "第", "集", None, True, True,
+                         match_bd_subtitles(r"../test_file/subtitle/8_25_subtitle", r"../test_file/target/bd_target3",
+                                            "第", "集", None, True, True,
                                             True, "../test_file/bdmv/8_25"))
 
     # 媒体统一测试
@@ -165,7 +176,7 @@ class MyTestCase(unittest.TestCase):
                                                None, None, None, True, True))
         self.assertEqual(200,
                          match_media_subtitles(r"../test_file/media/200_media", r"../test_file/subtitle/200_subtitle",
-                                               r"../test_file/target/bd_target",None,"集", True, True))
+                                               r"../test_file/target/bd_target", None, "集", True, True))
 
 
 if __name__ == '__main__':

@@ -12,10 +12,11 @@ SUPPORT_SUBLIST = [
 ]
 
 SUPPORT_MEDIA_LIST = [
-    "m2ts",
-    "wmv",
     "avi",
+    "flv",
+    "m2ts",
     "mp4",
     "mkv",
-    "flv",
+    "ts",
+    "wmv",
 ]

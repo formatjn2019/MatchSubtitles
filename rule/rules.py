@@ -118,6 +118,9 @@ def move_bd_to_target_force_by_num(target_path: str, prefix: str, suffix: str, n
                                    *BDMV_path: str) -> int:
     # 搜索原盘目录
     dic_list = search_bd(*BDMV_path)
+    if len(dic_list) == 0:
+        print("找不到圆盘文件")
+        return 0
     # 计算数量
     avg_num = round(num / len(dic_list))
     media_list = match_bd_media_force_dynamic(num, avg_num, *dic_list)
@@ -137,7 +140,7 @@ def move_bd_to_target_force_by_each(target_path: str, prefix: str, suffix: str, 
     dic_list = search_bd(*BDMV_path)
     if num is None:
         num = len(dic_list) * each
-    media_list = match_bd_media_force_each(num, each, *dic_list)
+    media_list = match_bd_media_force_dynamic(num, each, *dic_list)
     order_media_dic = {order + 1: media_list[order] for order in range(len(media_list))}
     source_target_dic = {}
     for order, media_path in order_media_dic.items():
