@@ -141,8 +141,8 @@ def scanning_subtitle(subtitles_path: str) -> dict:
                     suffix, current_count = temp_suffix, suffix_count[temp_suffix]
                 # 二级后缀及其统计
                 if point_count > 1:
-                    lsfx = filename[filename.rindex(".", 0, suffix_index) + 1:suffix_index]
-                    language_suffix_count[lsfx] = language_suffix_count.get(lsfx, 0) + 1
+                    language_suffix = filename[filename.rindex(".", 0, suffix_index) + 1:suffix_index]
+                    language_suffix_count[language_suffix] = language_suffix_count.get(language_suffix, 0) + 1
                 else:
                     language_suffix_count[""] = language_suffix_count.get("", 0) + 1
                 # 名称截取
@@ -216,9 +216,23 @@ def _search_bd(*paths: str) -> list:
 # 搜索原盘目录
 # 根据文件夹名或路径进行排序
 def search_bd(*paths: str) -> list:
-    # 根据文件夹名或路径排序
-    # 不同路径 根据路径排序，同一路径，根据文件名排序
-    return [path for _, path in sorted(_search_bd(*paths), key=lambda key: (key[0], key[1]))]
+    # 根据父文件夹名或路径排序
+    result = []
+    for bd_path in paths:
+        dir_path_list = _search_bd(bd_path)
+        dirs = [dir[0] for dir in dir_path_list]
+        dir_set = set(dirs)
+        prefix, suffix = search_max_prefix_suffix(*dirs, ratio=max(0.6, (len(dirs) - 1) / len(dirs)))
+        # 父文件夹无规则，则采用路径排序，否则采用父文件夹排序
+        if len(dir_path_list) != dir_set or len(prefix) + len(suffix) < len(dirs[0]) - 2:
+            result.extend([tp_path for _, tp_path in sorted(dir_path_list, key=lambda key: key[1])])
+        else:
+            result.extend([tp_path for _, tp_path in sorted(dir_path_list, key=lambda key: key[0])])
+    if setting.debug:
+        print("原盘文件夹顺序:")
+        for bd_path in result:
+            print(bd_path)
+    return result
 
 
 # 匹配原盘文件
@@ -267,6 +281,8 @@ def match_bd_media_force_each(expect: int, each: int, *bd_paths: str) -> list:
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
 def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -> list:
     result, messages, remain = [], [], expect
+    if setting.debug:
+        print("expect: {},per_number: {},bd_paths: {}".format(expect, per_number, bd_paths))
     # 强制动态匹配
     for bd_path in bd_paths:
         if remain <= 0:
@@ -282,12 +298,14 @@ def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -
             remain -= per_number
     # 依旧有剩余未能全部匹配的
     if remain > 0:
+        if setting.debug:
+            print(result)
         remain += per_number
         # 重新处理最后一个盘的文件
         result, messages = result[:-per_number], messages[:-1]
         media_files = search_maxsize_file(remain, os.path.join(bd_paths[-1], "BDMV", "STREAM"), suffix="m2ts")
         if len(media_files) < remain:
-            print("自动匹配失败")
+            print("自动匹配剩余文件失败")
             return []
         for media_file_name in media_files:
             result.append(os.path.join(bd_paths[-1], "BDMV", "STREAM", media_file_name))
