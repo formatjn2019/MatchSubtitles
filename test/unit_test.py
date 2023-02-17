@@ -99,6 +99,14 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(12, len(media_subtitle_dic))
         self.assertEqual(12, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
+    # 测试自动模式添加原盘字幕
+    def test_add_subtitle_for_BDMV_force_each(self):
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"../test_file/subtitle/6_11_subtitle")
+        media_subtitle_dic, media_list = match_bd_subtitle_force_by_order_and_num(subtitle_dic,2, r"../test_file/bdmv/6_11")
+        self.assertEqual(11, len(media_subtitle_dic))
+        self.assertEqual(11, add_subtitle_for_media(media_subtitle_dic, only_show=True))
+
     # 测试强制顺序模式添加原盘字幕
     def test_add_subtitle_for_BDMV_force_order(self):
         # # 搜索字幕目录
