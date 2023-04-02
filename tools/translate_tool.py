@@ -5,7 +5,7 @@ TRANSLATE_DIC = collections.OrderedDict()
 
 # 获取简繁映射字典
 # csv格式
-def init_translate_dic(filepath: str):
+def init_translate_dic(filepath: str, reverse: bool = False):
     try:
         with open(filepath, "r", encoding="utf8") as f:
             rules = f.readlines()
@@ -13,14 +13,17 @@ def init_translate_dic(filepath: str):
                 rule = rule.strip()
                 context = rule.split(",")
                 if len(context) == 2:
-                    TRANSLATE_DIC[context[0]] = context[1]
+                    if reverse:
+                        TRANSLATE_DIC[context[1]] = context[0]
+                    else:
+                        TRANSLATE_DIC[context[0]] = context[1]
     except IOError:
         print("加载翻译规则错误")
 
 
 # 翻译
 # 不指定保存路径则直接翻译原文
-def translate_file(file_path: str, target_path=None) -> bool:
+def translate_file(file_path: str, target_path: str = None) -> bool:
     try:
         if target_path is None:
             target_path = file_path

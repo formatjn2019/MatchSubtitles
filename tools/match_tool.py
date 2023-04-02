@@ -279,10 +279,10 @@ def match_bd_media_force_each(expect: int, each: int, *bd_paths: str) -> list:
 # 匹配原盘文件
 # 强制动态匹配
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
-def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -> list:
+def match_bd_media_force_dynamic(expect: int, per_number: int, reverse: bool, *bd_paths: str) -> list:
     result, messages, remain = [], [], expect
     if setting.debug:
-        print("expect: {},per_number: {},bd_paths: {}".format(expect, per_number, bd_paths))
+        print("expect: {},per_number: {},reverse:{},bd_paths: {}".format(expect, per_number, reverse, bd_paths))
     # 强制动态匹配
     for bd_path in bd_paths:
         if remain <= 0:
@@ -301,15 +301,30 @@ def match_bd_media_force_dynamic(expect: int, per_number: int, *bd_paths: str) -
         if setting.debug:
             print(result)
         remain += per_number
-        # 重新处理最后一个盘的文件
-        result, messages = result[:-per_number], messages[:-1]
-        media_files = search_maxsize_file(remain, os.path.join(bd_paths[-1], "BDMV", "STREAM"), suffix="m2ts")
-        if len(media_files) < remain:
-            print("自动匹配剩余文件失败")
-            return []
-        for media_file_name in media_files:
-            result.append(os.path.join(bd_paths[-1], "BDMV", "STREAM", media_file_name))
-        messages.append((bd_paths[-1], media_files))
+        # 翻转重新处理第一个盘里的文件，否则处理最后一个盘里的文件
+        if reverse:
+            # 重新处理第一个盘的文件
+            result, messages = result[per_number:], messages[1:]
+            media_files = search_maxsize_file(remain, os.path.join(bd_paths[0], "BDMV", "STREAM"), suffix="m2ts")
+            if len(media_files) < remain:
+                print("自动匹配剩余文件失败")
+                return []
+            # 翻转后依次插入到首部
+            media_files.reverse()
+            for media_file_name in media_files:
+                result = [os.path.join(bd_paths[0], "BDMV", "STREAM", media_file_name), *result]
+            messages = [(bd_paths[0], media_files), *messages]
+        else:
+            # 重新处理最后一个盘的文件
+            result, messages = result[:-per_number], messages[:-1]
+            media_files = search_maxsize_file(remain, os.path.join(bd_paths[-1], "BDMV", "STREAM"), suffix="m2ts")
+            if len(media_files) < remain:
+                print("自动匹配剩余文件失败")
+                return []
+            # 倒序后重新插入到行首
+            for media_file_name in media_files:
+                result.append(os.path.join(bd_paths[-1], "BDMV", "STREAM", media_file_name))
+            messages.append((bd_paths[-1], media_files))
 
     if setting.debug:
         for message in messages:

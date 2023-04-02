@@ -21,6 +21,8 @@ parser.add_argument('--debug', '-d', action='store_true', help='debug', default=
 parser.add_argument('--each', '-e', dest='each', type=int, help='Number of media files in each')
 # 强制模式
 parser.add_argument('--force', '-f', action='store_true', dest='force', help='Forced mode', default=False)
+# 通用媒体文件路径
+media_group.add_argument('--media', '-m', dest='media_path', help=('Media file path'))
 # 数量
 parser.add_argument('--num', '-n', dest='number', type=int, help='number of media')
 # 前缀
@@ -28,6 +30,8 @@ parser.add_argument('--prefix', '-pf', dest='prefix', help='File name prefix')
 # 显示
 parser.add_argument('--print', '-p', action='store_true', dest='only_print', help='Only print on the console',
                     default=False)
+# 翻转
+parser.add_argument('--reverse', '-r', action='store_true', dest='reverse', help='reverse', default=False)
 # 后缀
 parser.add_argument('--suffix', '-sf', dest='suffix', help='File name suffix')
 # 字幕文件夹
@@ -41,22 +45,21 @@ parser.add_argument('--version', '-V', action='version', version='%(prog)s versi
                     help='Show the version')
 # 详细
 parser.add_argument('--verbosity', '-v', action='store_true', help='Increase output verbosity', default=False)
-# 通用媒体文件路径
-media_group.add_argument('--media', '-m', dest='media_path', help=('Media file path'))
 
 
 # 生成可允许的队列
 def generate_allows() -> dict:
     allowed = []
     # 原盘或媒体,字幕三种操作
-    for opt in [["b", "s"], ["b", "f", "s"], ["b", "f", "s", "e"], ["m", "s"]]:
+    for opt in [["b", "s"], ["b", "f", "s"], ["b", "f", "r", "s"], ["b", "f", "s", "e"], ["m", "s"]]:
         tp = [opt]
         # 复制
         tp.extend([[*opt, "c"] for opt in tp if "s" in opt])
         # 添加目标路径
         tp.extend([[*opt, "t"] for opt in tp])
         allowed.extend(tp)
-    for opt in [*allowed, ["b", "f", "n", "t"], ["b", "f", "e", "t"], ["b", "f", "e", "n", "t"]]:
+    for opt in [*allowed, ["b", "f", "n", "t"], ["b", "f", "n", "r", "t"], ["b", "f", "e", "t"],
+                ["b", "f", "e", "n", "t"]]:
         tp = [opt]
         # 前缀
         tp.extend([[*opt, "pf"] for opt in tp if "t" in opt])
@@ -69,8 +72,10 @@ def generate_allows() -> dict:
     # 特殊情况
     # 仅翻译字幕
     allowed.append(["tr", "s"])
+    allowed.append(["tr", "r", "s"])
     # 翻译字幕指定路径
     allowed.append(["tr", "s", "t"])
+    allowed.append(["tr", "r", "s", "t"])
     # 详细信息
     allowed.extend([[*opt, "v"] for opt in allowed])
     # 调试
@@ -93,6 +98,7 @@ def translate_arr(*args: str) -> (str, str):
         "v": ("详细信息", 15),
         "tr": ("翻译", 4),
         "pf": ("指定前缀", 9),
+        "r": ("翻转", 12),
         "sf": ("指定后缀", 10),
     }
     return ".".join(sorted(args)), " ".join([explain[key][0] for key in sorted(args, key=lambda x: explain[x][1])])
@@ -110,6 +116,7 @@ if __name__ == '__main__':
     media_path = args.media_path
     number = args.number
     prefix = args.prefix
+    reverse = args.reverse
     suffix = args.suffix
     translate = args.translate
     setting.verbosity = verbosity = args.verbosity or args.debug
@@ -128,6 +135,7 @@ if __name__ == '__main__':
         "n": (number, True, ""),
         "pf": (prefix, True, ""),
         "p": (only_print, True, ""),
+        "r": (reverse, True, ""),
         "sf": (suffix, True, ""),
         "tr": (translate, True, ""),
         "v": (verbosity, True, ""),
@@ -155,22 +163,24 @@ if __name__ == '__main__':
             print(arg, introduce)
         sys.exit(1)
     # 翻译字幕
-    if select_arg_str == "s.tr" or select_arg_str == "s.t.tr":
-        translate_count = translate_subtitles(subtitles_path=subtitle, target_path=target_path)
+    if select_arg_str == "s.tr" or select_arg_str == "s.t.tr" or select_arg_str == "r.s.tr" or select_arg_str == "r.s.t.tr":
+        translate_count = translate_subtitles(subtitles_path=subtitle, target_path=target_path, reverse=reverse)
         print("共翻译成功{}个".format(translate_count))
     # 移动bd媒体文件 根据数量自适应
-    elif select_arg_str == "b.f.n.t":
+    elif select_arg_str == "b.f.n.t" or select_arg_str == "b.f.n.r.t":
         print("数量匹配")
         # 提取目标bd文件到目标位置 指定数量
-        move_bd_to_target_force_by_num(target_path, prefix, suffix, number, only_print, *bd_path)
+        move_bd_to_target_force_by_num(target_path, prefix, suffix, number, only_print, reverse, *bd_path)
     # 移动媒体文件 根据数量和强制指定每个文件夹数量
     elif select_arg_str in ["b.e.f.t", "b.e.f.n.t"]:
         print("数量,每个匹配")
         # 提取目标bd文件到目标位置 指定每个，可选总数
         move_bd_to_target_force_by_each(target_path, prefix, suffix, number, each, only_print, *bd_path)
-    elif select_arg_str in ["b.s", "b.f.s", "b.e.f.s", "b.s.t", "b.f.s.t", "b.e.f.s.t"]:
+    # 移动媒体文件 根据数量强制匹配
+    elif select_arg_str in ["b.s", "b.f.s", "b.e.f.s", "b.s.t", "b.f.s.t", "b.e.f.s.t", "b.f.r.s", "b.f.r.s.t"]:
         print("匹配原盘")
-        match_bd_subtitles(subtitle, target_path, prefix, suffix, each, force, only_print, copy_subtitle, *bd_path)
+        match_bd_subtitles(subtitle, target_path, prefix, suffix, each, force, only_print, copy_subtitle, reverse,
+                           *bd_path)
     elif select_arg_str in ["m.s", "m.s.t"]:
         print("匹配媒体")
         match_media_subtitles(media_path, subtitle, target_path, prefix, suffix, only_print, copy_subtitle)

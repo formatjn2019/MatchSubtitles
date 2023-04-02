@@ -103,7 +103,8 @@ class MyTestCase(unittest.TestCase):
     def test_add_subtitle_for_BDMV_force_each(self):
         # # 搜索字幕目录
         subtitle_dic = scanning_subtitle(r"../test_file/subtitle/6_11_subtitle")
-        media_subtitle_dic, media_list = match_bd_subtitle_force_by_order_and_num(subtitle_dic,2, r"../test_file/bdmv/6_11")
+        media_subtitle_dic, media_list = match_bd_subtitle_force_by_order_and_num(subtitle_dic, 2,
+                                                                                  r"../test_file/bdmv/6_11")
         self.assertEqual(11, len(media_subtitle_dic))
         self.assertEqual(11, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
@@ -116,12 +117,23 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(12, len(media_subtitle_dic))
         self.assertEqual(24, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
+    # 测试强制匹配
     def test_match_bd_subtitle_force_by_subtitle(self):
         # # 搜索字幕目录
         subtitle_dic = scanning_subtitle(r"../test_file/subtitle/8_25_subtitle")
-        media_subtitle_dic, media_list = match_bd_subtitle_force_by_subtitle(subtitle_dic, r"../test_file/bdmv/8_25")
+        media_subtitle_dic, media_list = match_bd_subtitle_force_by_subtitle(subtitle_dic, False,
+                                                                             r"../test_file/bdmv/8_25")
         self.assertEqual(25, len(media_subtitle_dic))
         self.assertEqual(50, add_subtitle_for_media(media_subtitle_dic, only_show=True))
+
+    # 促成翻转强制匹配
+    def test_match_bd_subtitle_force_by_subtitle_reverse(self):
+        # # 搜索字幕目录
+        subtitle_dic = scanning_subtitle(r"../test_file/subtitle/6_13_subtitle")
+        media_subtitle_dic, media_list = match_bd_subtitle_force_by_subtitle(subtitle_dic, True,
+                                                                             r"../test_file/bdmv/6_13_rev")
+        self.assertEqual(13, len(media_subtitle_dic))
+        self.assertEqual(13, add_subtitle_for_media(media_subtitle_dic, only_show=True))
 
     # 测试文件移动
     def test_move_media_subtitle_to_new_path(self):
@@ -144,10 +156,12 @@ class MyTestCase(unittest.TestCase):
 
     # 测试根据数量移动
     def test_move_bd_to_target_force_by_num(self):
-        self.assertEqual(12, move_bd_to_target_force_by_num(r"../test_file/target/bd_target2", "第", "集", 12, True,
-                                                            r"../test_file/bdmv/6_12"))
-        self.assertEqual(25, move_bd_to_target_force_by_num(r"../test_file/target/bd_target3", "第", "集", 25, True,
-                                                            r"../test_file/bdmv/8_25"))
+        self.assertEqual(12,
+                         move_bd_to_target_force_by_num(r"../test_file/target/bd_target2", "第", "集", 12, True, False,
+                                                        r"../test_file/bdmv/6_12"))
+        self.assertEqual(25,
+                         move_bd_to_target_force_by_num(r"../test_file/target/bd_target3", "第", "集", 25, True, False,
+                                                        r"../test_file/bdmv/8_25"))
 
     # 指定数量跟每个光盘文件移动
     def test_move_bd_to_target_force_by_each(self):
@@ -157,26 +171,29 @@ class MyTestCase(unittest.TestCase):
     # 原盘统一测试
     def test_match_bd_subtitles(self):
         self.assertEqual(12, match_bd_subtitles(r"../test_file/subtitle/6_12_subtitle", None, None, None, None, False,
-                                                False, True, "../test_file/bdmv/6_12"))
+                                                False, True, False, "../test_file/bdmv/6_12"))
         self.assertEqual(24,
                          match_bd_subtitles(r"../test_file/subtitle/7_12_subtitle", None, None, None, 2, True, False,
-                                            True, "../test_file/bdmv/7_12"))
+                                            True, False, "../test_file/bdmv/7_12"))
         self.assertEqual(50,
                          match_bd_subtitles(r"../test_file/subtitle/8_25_subtitle", None, None, None, None, True, False,
-                                            True, "../test_file/bdmv/8_25"))
+                                            True, False, "../test_file/bdmv/8_25"))
         self.assertEqual(12,
                          match_bd_subtitles(r"../test_file/subtitle/6_12_subtitle", r"../test_file/target/bd_target1",
                                             "第", "集", None, False, True,
-                                            True, "../test_file/bdmv/6_12"))
+                                            True, False, "../test_file/bdmv/6_12"))
         self.assertEqual(12,
                          match_bd_subtitles(r"../test_file/subtitle/7_12_subtitle", r"../test_file/target/bd_target2",
                                             "第", "集", 2, True, True,
-                                            True, "../test_file/bdmv/7_12"))
+                                            True, False, "../test_file/bdmv/7_12"))
         self.assertEqual(25,
                          match_bd_subtitles(r"../test_file/subtitle/8_25_subtitle", r"../test_file/target/bd_target3",
                                             "第", "集", None, True, True,
-                                            True, "../test_file/bdmv/8_25"))
-
+                                            True, False, "../test_file/bdmv/8_25"))
+        self.assertEqual(13,
+                         match_bd_subtitles(r"../test_file/subtitle/6_13_subtitle", r"../test_file/target/bd_target1",
+                                            "第", "集", None, True, True,
+                                            True, True, "../test_file/bdmv/6_13_rev"))
     # 媒体统一测试
     def test_match_media_subtitles(self):
         self.assertEqual(201,
