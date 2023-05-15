@@ -1,12 +1,13 @@
+import math
 import os
 import re
 
 from setting import setting
 from tools.file_tool import add_subtitle_for_media, move_media_subtitle_to_new_path, move_copy_files
-from tools.match_tool import scanning_subtitle, search_bd, match_bd_media, match_bd_media_force_each, \
+from tools.match_tool import scanning_subtitle, search_bd, match_bd_media_force_each, \
     match_bd_media_force_dynamic, scanning_media
 from tools.translate_tool import init_translate_dic, translate_file
-from utils.file_util import get_file_extension, generate_filename
+from utils.file_util import get_file_extension, generate_filename, get_file_size
 
 KEY_WORDS_RULE_DIC = {
     "全部匹配": re.compile(r"^.*$"),
@@ -38,15 +39,59 @@ def match_bd_subtitle_auto(subtitle_dic: dict, *BDMV_path: str) -> (dict, list):
     dic_list = search_bd(*BDMV_path)
     if setting.debug:
         print(dic_list)
+    media_list = match_bd_file_auto(*dic_list)
     for name, rule in KEY_WORDS_RULE_DIC.items():
         keywords = sorted([keyword for keyword in subtitle_dic.keys() if rule.match(keyword)])
         print("采用 《{}》 规则解析字幕 共{}集\n分别为\t{}".format(name, len(keywords), "\t".join(keywords)))
         # 尝试根据字幕数量完全匹配
-        media_list = match_bd_media(len(keywords), *dic_list)
-        if len(media_list) > 0:
+        if len(media_list) == len(keywords):
             return _match_media_subtitle(subtitle_dic, media_list, *keywords), media_list
     print("匹配失败")
     return {}, []
+
+
+# 原盘动态匹配
+# 根据文件大小动态匹配
+def match_bd_file_auto(*dic_list: str) -> list:
+    result = []
+    # 媒体文件列表
+    media_size_dic, media_level_dic, arg_dic = {}, {}, []
+    for i in range(len(dic_list)):
+        media_dir = os.path.join(dic_list[i], "BDMV", "STREAM")
+        media_path_list = [os.path.join(media_dir, media_name) for media_name in os.listdir(media_dir) if
+                           media_name.endswith(".m2ts")]
+        media_path_list.sort()
+        print(media_path_list)
+        for j in range(len(media_path_list)):
+            media_size_dic[media_path_list[j]] = get_file_size(media_path_list[j])
+            media_level_dic[media_path_list[j]] = ((i + 1) << 9) + j
+    # 找出最大n集取平均值，然后求方差
+    size_items = [size for size in media_size_dic.values()]
+    size_items.sort()
+    avg = int(sum(size_items[-setting.AVG_NUM:]) / setting.AVG_NUM)
+    max_size = size_items[-1]
+    # 参数列表 (媒体路径,文件大小,方差)
+    arg_item = [(path, size, (size - avg) ** 2) for path, size in media_size_dic.items()]
+    # 方差排序
+    arg_item.sort(key=lambda item: item[2])
+    for i in range(len(arg_item)):
+        print(arg_item[i])
+        media_path, size, variance = arg_item[i]
+        print(media_path, size, variance)
+        if setting.debug:
+            print("mediaPath:\t{}\tsize:\t{}\tvariance:\t{}\tvisualSize:\t{:.2f}G\tvarianceLenth:\t{}".format(media_path, size, variance, size / 2 ** 30, round(math.log10(variance))))
+        # 方差比率和文件大小比率到达指定值，跳出
+        if i > 0 and max_size / size > setting.SIZE_RATE and variance / arg_item[i - 1][2] > setting.VARIANCE_RATE:
+            break
+        result.append(media_path)
+
+    print("*" * 100)
+    result.sort(key=lambda item: media_level_dic[item])
+    if setting.verbosity:
+        for media_path in result:
+            print(media_path)
+        print("*" * 100)
+    return result
 
 
 # 原盘剧集匹配

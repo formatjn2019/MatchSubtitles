@@ -236,28 +236,6 @@ def search_bd(*paths: str) -> list:
 
 
 # 匹配原盘文件
-# 根据期望数量匹配
-# 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
-def match_bd_media(expect: int, *bd_paths: str) -> list:
-    result = []
-    # 能精准匹配
-    if expect % len(bd_paths) == 0:
-        # 预估剧集数量
-        episodes_num = int(expect / len(bd_paths))
-        for bd_path in bd_paths:
-            media_files = search_maxsize_file(episodes_num, os.path.join(bd_path, "BDMV", "STREAM"), suffix="m2ts")
-            if setting.verbosity:
-                print(bd_path, media_files)
-            # 无法获取到期望数量的媒体文件
-            if len(media_files) != episodes_num:
-                return []
-            else:
-                for media_file_name in media_files:
-                    result.append(os.path.join(bd_path, "BDMV", "STREAM", media_file_name))
-    return result
-
-
-# 匹配原盘文件
 # 指定每个光盘数量剧集，强制匹配
 # 注 bd_paths 必须是按照光盘文件的顺序，不然会出错
 def match_bd_media_force_each(expect: int, each: int, *bd_paths: str) -> list:
