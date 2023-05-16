@@ -167,8 +167,8 @@ if __name__ == '__main__':
         print("不允许的参数")
         print("当前参数为", arg_str)
         print("允许的参数为:")
-        # for arg, introduce in allow_parameters.items():
-        #     print(arg, introduce)
+        for arg, introduce in allow_parameters.items():
+            print(arg, introduce)
         sys.exit(1)
     # 翻译字幕
     if select_arg_str == "s.tr" or select_arg_str == "s.t.tr" or select_arg_str == "r.s.tr" or select_arg_str == "r.s.t.tr":
