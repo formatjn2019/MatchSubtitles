@@ -3,7 +3,7 @@ import os
 import re
 
 from setting import setting
-from tools.file_tool import add_subtitle_for_media, move_media_subtitle_to_new_path, move_copy_files
+from tools.file_tool import add_subtitle_for_media, move_media_subtitle_to_new_path, file_move
 from tools.match_tool import scanning_subtitle, search_bd, match_bd_media_force_each, \
     match_bd_media_force_dynamic, scanning_media
 from tools.translate_tool import init_translate_dic, translate_file
@@ -79,7 +79,8 @@ def match_bd_file_auto(*dic_list: str) -> list:
         media_path, size, variance = arg_item[i]
         print(media_path, size, variance)
         if setting.debug:
-            print("mediaPath:\t{}\tsize:\t{}\tvariance:\t{}\tvisualSize:\t{:.2f}G\tvarianceLenth:\t{}".format(media_path, size, variance, size / 2 ** 30, round(math.log10(variance))))
+            print("mediaPath:\t{}\tsize:\t{}\tvariance:\t{}\tvisualSize:\t{:.2f}G\tvarianceLenth:\t{}"
+                  .format(media_path, size, variance, size / 2 ** 30, round(math.log10(max(variance, 1)))))
         # 方差比率和文件大小比率到达指定值，跳出
         if i > 0 and max_size / size > setting.SIZE_RATE and variance / arg_item[i - 1][2] > setting.VARIANCE_RATE:
             break
@@ -159,9 +160,28 @@ def translate_subtitles(subtitles_path: str, target_path: str, translate_dic: st
     return result
 
 
+# 使用自动匹配移动原盘媒体文件
+def move_bd_to_target(target_path, prefix, suffix, only_show, reverse, hardlink, *bd_path):
+    # 搜索原盘目录
+    dic_list = search_bd(*bd_path)
+    if len(dic_list) == 0:
+        print("找不到原盘文件")
+        return 0
+    if setting.debug:
+        print(dic_list)
+    media_list = match_bd_file_auto(*dic_list)
+    order_media_dic = {order + 1: media_list[order] for order in range(len(media_list))}
+    source_target_dic = {}
+    for order, media_path in order_media_dic.items():
+        new_filename = generate_filename(len(media_list), prefix, suffix, order) + "." + get_file_extension(media_path)
+        source_target_dic[media_path] = os.path.join(target_path, new_filename)
+    succeed, error = file_move(source_target_dic, only_show, hardlink=hardlink)
+    return succeed if not only_show else len(source_target_dic)
+
+
 # 移动bd文件到目录路径,指定数量
 def move_bd_to_target_force_by_num(target_path: str, prefix: str, suffix: str, num: int, only_show: bool,
-                                   reverse: bool, *BDMV_path: str) -> int:
+                                   reverse: bool, hardlink: bool, *BDMV_path: str) -> int:
     # 搜索原盘目录
     dic_list = search_bd(*BDMV_path)
     if len(dic_list) == 0:
@@ -175,16 +195,16 @@ def move_bd_to_target_force_by_num(target_path: str, prefix: str, suffix: str, n
     for order, media_path in order_media_dic.items():
         new_filename = generate_filename(num, prefix, suffix, order) + "." + get_file_extension(media_path)
         source_target_dic[media_path] = os.path.join(target_path, new_filename)
-    succeed, error = move_copy_files(source_target_dic, only_show)
+    succeed, error = file_move(source_target_dic, only_show, hardlink=hardlink)
     return succeed if not only_show else len(source_target_dic)
 
 
 # 移动bd文件到目录路径,指定数量
 def move_bd_to_target_force_by_each(target_path: str, prefix: str, suffix: str, num: int, each: int, only_show: bool,
-                                    *BDMV_path: str) -> int:
+                                    hardlink: bool, *BDMV_path: str) -> int:
     # 搜索原盘目录
     dic_list = search_bd(*BDMV_path)
-    if num is None:
+    if num == 0:
         num = len(dic_list) * each
     media_list = match_bd_media_force_dynamic(num, each, False, *dic_list)
     order_media_dic = {order + 1: media_list[order] for order in range(len(media_list))}
@@ -194,13 +214,13 @@ def move_bd_to_target_force_by_each(target_path: str, prefix: str, suffix: str, 
             media_path)
         source_target_dic[media_path] = os.path.join(target_path, new_filename)
 
-    succeed, error = move_copy_files(source_target_dic, only_show)
+    succeed, error = file_move(source_target_dic, only_show, hardlink=hardlink)
     return succeed if not only_show else len(source_target_dic)
 
 
 # 原盘字幕匹配
 def match_bd_subtitles(subtitle_path: str, target_path: str, prefix: str, suffix: str, each: int,
-                       force: bool, only_show: bool, copy_subtitle: bool, reverse: bool,
+                       force: bool, only_show: bool, copy_subtitle: bool, reverse: bool, hardlink: bool,
                        *bd_path) -> int:
     subtitle_dic = scanning_subtitle(subtitle_path)
     if len(subtitle_dic) == 0:
@@ -211,7 +231,7 @@ def match_bd_subtitles(subtitle_path: str, target_path: str, prefix: str, suffix
         media_subtitle_dic, media_list = match_bd_subtitle_auto(subtitle_dic, *bd_path)
     else:
         # 强制模式
-        if each is not None:
+        if each != 0:
             # 根据字幕数量和每个光盘文件中有效媒体的数量匹配
             media_subtitle_dic, media_list = match_bd_subtitle_force_by_order_and_num(subtitle_dic, each, *bd_path)
         else:
@@ -221,19 +241,20 @@ def match_bd_subtitles(subtitle_path: str, target_path: str, prefix: str, suffix
     if len(media_subtitle_dic) == 0:
         print("匹配字幕和媒体文件失败")
         return 0
-    if target_path is None:
-        return add_subtitle_for_media(media_subtitle_dic, only_show=only_show, copy_subtitle=copy_subtitle)
+    if "" == target_path:
+        return add_subtitle_for_media(media_subtitle_dic, only_show=only_show, copy_subtitle=copy_subtitle,
+                                      hardlink=hardlink)
     else:
         return move_media_subtitle_to_new_path(media_subtitle_dic=media_subtitle_dic,
                                                order_media_dic={order + 1: media_list[order] for order in
                                                                 range(len(media_list))},
                                                target_dir=target_path, suffix=suffix, prefix=prefix,
-                                               only_show=only_show, copy_subtitle=copy_subtitle)
+                                               only_show=only_show, copy_subtitle=copy_subtitle, hardlink=hardlink)
 
 
 # 匹配媒体文件和字幕
 def match_media_subtitles(media_path: str, subtitle_path: str, target_path: str, prefix: str, suffix: str,
-                          only_show: bool, copy_subtitle: bool) -> int:
+                          only_show: bool, hardlink: bool, copy_subtitle: bool) -> int:
     subtitle_dic = scanning_subtitle(subtitle_path)
     media_dic = scanning_media(media_path)
     if setting.debug:
@@ -246,12 +267,12 @@ def match_media_subtitles(media_path: str, subtitle_path: str, target_path: str,
     media_subtitle_dic, media_list = match_media_subtitle_auto(media_dic, subtitle_dic)
     if len(media_subtitle_dic) == 0:
         print("匹配失败")
-    if target_path is None:
+    if "" == target_path:
         return add_subtitle_for_media(media_subtitle_dic=media_subtitle_dic, only_show=only_show,
-                                      copy_subtitle=copy_subtitle)
+                                      copy_subtitle=copy_subtitle, hardlink=hardlink)
     else:
         return move_media_subtitle_to_new_path(media_subtitle_dic=media_subtitle_dic,
                                                order_media_dic={order + 1: media_list[order] for order in
                                                                 range(len(media_list))},
                                                target_dir=target_path, suffix=suffix, prefix=prefix,
-                                               only_show=only_show, copy_subtitle=copy_subtitle)
+                                               only_show=only_show, copy_subtitle=copy_subtitle, hardlink=hardlink)

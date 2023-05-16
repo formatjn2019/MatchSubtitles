@@ -6,7 +6,7 @@ from utils import file_util
 
 
 # 移动,复制文件，统一处理
-def move_copy_files(source_target_dic: dict, only_show=False, copy_file=False) -> (int, int):
+def file_move(source_target_dic: dict, only_show=False, copy_file=False, hardlink=False) -> (int, int):
     succeed, error = 0, 0
     for source_path, target_path in source_target_dic.items():
         if only_show:
@@ -15,6 +15,8 @@ def move_copy_files(source_target_dic: dict, only_show=False, copy_file=False) -
             try:
                 if copy_file:
                     shutil.copyfile(source_path, target_path)
+                elif hardlink:
+                    os.link(source_path, target_path)
                 else:
                     shutil.move(source_path, target_path)
             except IOError as e:
@@ -31,7 +33,8 @@ def move_copy_files(source_target_dic: dict, only_show=False, copy_file=False) -
 
 # 为媒体文件添加字幕
 # 注 多次运行会进行字幕的覆盖
-def add_subtitle_for_media(media_subtitle_dic: dict, only_show: bool = True, copy_subtitle=False) -> int:
+def add_subtitle_for_media(media_subtitle_dic: dict, only_show: bool = True, copy_subtitle=False,
+                           hardlink=False) -> int:
     subtitle_set = set()
     subtitle_source_target_dic = {}
     for media_path, subtitles in media_subtitle_dic.items():
@@ -48,13 +51,13 @@ def add_subtitle_for_media(media_subtitle_dic: dict, only_show: bool = True, cop
             else:
                 subtitle_set.add(new_subtitle_path)
             subtitle_source_target_dic[subtitle_path] = new_subtitle_path
-    succeed, _ = move_copy_files(subtitle_source_target_dic, only_show, copy_subtitle)
+    succeed, _ = file_move(subtitle_source_target_dic, only_show, copy_subtitle, hardlink=hardlink)
     return sum([len(subtitles) for _, subtitles in media_subtitle_dic.items()]) if only_show else succeed
 
 
 # 将全部文件移动到新路径
 def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: dict, target_dir: str, prefix="",
-                                    suffix="", only_show: bool = True, copy_subtitle=False) -> int:
+                                    suffix="", only_show: bool = True, copy_subtitle=False, hardlink=False) -> int:
     media_dic, subtitle_dic, subtitles_set = {}, {}, set()
     for order, media_path in order_media_dic.items():
         # 格式化，根据剧集数量计算格式化字符长度
@@ -74,6 +77,6 @@ def move_media_subtitle_to_new_path(media_subtitle_dic: dict, order_media_dic: d
                 subtitles_set.add(new_subtitle_name)
                 subtitle_dic[subtitle_path] = os.path.join(target_dir, new_subtitle_name)
 
-    move_copy_files(source_target_dic=subtitle_dic, only_show=only_show, copy_file=copy_subtitle)
-    successes, _ = move_copy_files(source_target_dic=media_dic, only_show=only_show, copy_file=False)
+    file_move(source_target_dic=subtitle_dic, only_show=only_show, copy_file=copy_subtitle, hardlink=hardlink)
+    successes, _ = file_move(source_target_dic=media_dic, only_show=only_show, copy_file=False, hardlink=hardlink)
     return successes if not only_show else len(media_dic)
