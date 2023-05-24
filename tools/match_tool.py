@@ -128,7 +128,7 @@ def scanning_subtitle(subtitles_path: str) -> dict:
     # 后缀统计 二级后缀统计  名称统计
     suffix_count, language_suffix_count, name_count = {}, {}, {}
     for filename in os.listdir(subtitles_path):
-        point_count = filename.count(".")
+        point_count = len(re.findall(r"\.[a-zA-Z]+",filename))
         if point_count > 0:
             # 后缀及其统计
             suffix_index = filename.rindex(".")
