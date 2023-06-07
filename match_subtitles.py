@@ -120,7 +120,7 @@ if __name__ == '__main__':
     force = args.force
     hardlink = args.hardlink
     media_path = args.media_path
-    number = args.number if args.prefix is not None else 0
+    number = args.number if args.number is not None else 0
     prefix = args.prefix if args.prefix is not None else ""
     reverse = args.reverse
     suffix = args.suffix if args.suffix is not None else ""
